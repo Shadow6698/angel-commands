@@ -6,21 +6,20 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local prefix = ";"
 local originalCameraSubject = Camera.CameraSubject
 
--- Atualiza a referência do Humanoid para a câmera voltar sempre correta
+-- Atualiza referência do Humanoid para a câmera
 local function updateOriginalCameraSubject()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         originalCameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
     end
 end
 
--- Atualiza na entrada e quando o personagem respawnar
 updateOriginalCameraSubject()
 LocalPlayer.CharacterAdded:Connect(function()
-    wait(1) -- espera personagem carregar
+    wait(1)
     updateOriginalCameraSubject()
 end)
 
--- Tela dos comandos
+-- Tela dos comandos (GUI)
 local function showCommandsGui()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "ComandosInfoGui"
@@ -28,26 +27,27 @@ local function showCommandsGui()
     screenGui.Parent = PlayerGui
 
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(0.5, 0, 0.3, 0)
-    textLabel.Position = UDim2.new(0.25, 0, 0.35, 0)
+    textLabel.Size = UDim2.new(0.5, 0, 0.4, 0)
+    textLabel.Position = UDim2.new(0.25, 0, 0.3, 0)
     textLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     textLabel.BackgroundTransparency = 0.3
-    textLabel.TextColor3 = Color3.new(1,1,1)
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
     textLabel.TextScaled = true
     textLabel.Font = Enum.Font.SourceSansBold
     textLabel.TextWrapped = true
     textLabel.Text = [[
-Comandos disponíveis:
+🔥 Comandos disponíveis 🔥
 
 ;tp [nick] - Teleporta até o jogador
 ;tpsofa - Teleporta para o sofá
-;speed [n] - Define velocidade
-;jumppower [n] - Define pulo
+;speed [n] - Define sua velocidade
+;jumppower [n] - Define seu pulo
 ;view [nick] - Ver câmera do jogador
-;unview - Voltar câmera normal
+;unview - Voltar para sua visão
 ;xray - Ver através das paredes
-;unxray - Voltar visão normal
-;coolkidhub - Executa o COOLKIDHUB
+;unxray - Desativa o xray
+;coolkidhub - Ativa o COOLKIDHUB
+;portalgun - Ativa a Portal Gun
 ]]
     textLabel.Parent = screenGui
 
@@ -58,7 +58,7 @@ end
 
 showCommandsGui()
 
--- Para armazenar transparências para reverter depois (xray)
+-- Xray sistema
 local xrayParts = {}
 
 local function enableXray()
@@ -80,7 +80,7 @@ local function disableXray()
     xrayParts = {}
 end
 
--- Chat commands
+-- Sistema de comandos pelo chat
 LocalPlayer.Chatted:Connect(function(msg)
     if msg:sub(1, #prefix) == prefix then
         local args = string.split(msg, " ")
@@ -153,6 +153,15 @@ LocalPlayer.Chatted:Connect(function(msg)
             end)
             if not success then
                 warn("Erro ao executar COOLKIDHUB:", err)
+            end
+
+        -- ;portalgun
+        elseif command == "portalgun" then
+            local success, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
+            end)
+            if not success then
+                warn("Erro ao executar PortalGun:", err)
             end
         end
     end
