@@ -48,6 +48,7 @@ local function showCommandsGui()
 ;unxray - Desativa o xray
 ;coolkidhub - Ativa o COOLKIDHUB
 ;portalgun - Ativa a Portal Gun
+;void - Ativa o Void FE
 ]]
     textLabel.Parent = screenGui
 
@@ -162,6 +163,15 @@ LocalPlayer.Chatted:Connect(function(msg)
             end)
             if not success then
                 warn("Erro ao executar PortalGun:", err)
+            end
+
+        -- ;void
+        elseif command == "void" then
+            local success, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
+            end)
+            if not success then
+                warn("Erro ao executar Void FE:", err)
             end
         end
     end
