@@ -6,6 +6,20 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local prefix = ";"
 local originalCameraSubject = Camera.CameraSubject
 
+-- Atualiza a referência do Humanoid para a câmera voltar sempre correta
+local function updateOriginalCameraSubject()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        originalCameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    end
+end
+
+-- Atualiza na entrada e quando o personagem respawnar
+updateOriginalCameraSubject()
+LocalPlayer.CharacterAdded:Connect(function()
+    wait(1) -- espera personagem carregar
+    updateOriginalCameraSubject()
+end)
+
 -- Tela dos comandos
 local function showCommandsGui()
     local screenGui = Instance.new("ScreenGui")
@@ -26,6 +40,7 @@ local function showCommandsGui()
 Comandos disponíveis:
 
 ;tp [nick] - Teleporta até o jogador
+;tpsofa - Teleporta para o sofá
 ;speed [n] - Define velocidade
 ;jumppower [n] - Define pulo
 ;view [nick] - Ver câmera do jogador
@@ -65,11 +80,13 @@ local function disableXray()
     xrayParts = {}
 end
 
+-- Chat commands
 LocalPlayer.Chatted:Connect(function(msg)
     if msg:sub(1, #prefix) == prefix then
         local args = string.split(msg, " ")
         local command = string.lower(string.sub(args[1], #prefix + 1))
 
+        -- ;tp [nick]
         if command == "tp" and args[2] then
             local target = Players:FindFirstChild(args[2])
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
@@ -78,6 +95,15 @@ LocalPlayer.Chatted:Connect(function(msg)
                 warn("Jogador não encontrado ou sem personagem.")
             end
 
+        -- ;tpsofa
+        elseif command == "tpsofa" then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
+            else
+                warn("Personagem não encontrado.")
+            end
+
+        -- ;speed [n]
         elseif command == "speed" and args[2] then
             local speed = tonumber(args[2])
             if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -86,6 +112,7 @@ LocalPlayer.Chatted:Connect(function(msg)
                 warn("Valor inválido para velocidade.")
             end
 
+        -- ;jumppower [n]
         elseif command == "jumppower" and args[2] then
             local jp = tonumber(args[2])
             if jp and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -94,6 +121,7 @@ LocalPlayer.Chatted:Connect(function(msg)
                 warn("Valor inválido para JumpPower.")
             end
 
+        -- ;view [nick]
         elseif command == "view" and args[2] then
             local target = Players:FindFirstChild(args[2])
             if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
@@ -102,6 +130,7 @@ LocalPlayer.Chatted:Connect(function(msg)
                 warn("Jogador para view não encontrado ou sem personagem.")
             end
 
+        -- ;unview
         elseif command == "unview" then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -109,12 +138,15 @@ LocalPlayer.Chatted:Connect(function(msg)
                 Camera.CameraSubject = originalCameraSubject
             end
 
+        -- ;xray
         elseif command == "xray" then
             enableXray()
 
+        -- ;unxray
         elseif command == "unxray" then
             disableXray()
 
+        -- ;coolkidhub
         elseif command == "coolkidhub" then
             local success, err = pcall(function()
                 loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
