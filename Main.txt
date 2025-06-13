@@ -1,0 +1,82 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local prefix = ";"
+local originalCameraSubject = Camera.CameraSubject
+
+-- Armazena transparências para reverter depois
+local xrayParts = {}
+
+local function enableXray()
+    xrayParts = {}
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Transparency < 1 then
+            -- Salva a transparência original
+            table.insert(xrayParts, {part = part, transparency = part.Transparency})
+            part.Transparency = 0.7 -- ou o valor que quiser para xray
+        end
+    end
+end
+
+local function disableXray()
+    for _, data in pairs(xrayParts) do
+        if data.part and data.part.Parent then
+            data.part.Transparency = data.transparency
+        end
+    end
+    xrayParts = {}
+end
+
+LocalPlayer.Chatted:Connect(function(msg)
+    if msg:sub(1, #prefix) == prefix then
+        local args = string.split(msg, " ")
+        local command = string.lower(string.sub(args[1], #prefix + 1))
+
+        if command == "tp" and args[2] then
+            local target = Players:FindFirstChild(args[2])
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character:MoveTo(target.Character.HumanoidRootPart.Position)
+            else
+                warn("Jogador não encontrado ou sem personagem.")
+            end
+
+        elseif command == "speed" and args[2] then
+            local speed = tonumber(args[2])
+            if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
+            else
+                warn("Valor inválido para velocidade.")
+            end
+
+        elseif command == "jumppower" and args[2] then
+            local jp = tonumber(args[2])
+            if jp and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = jp
+            else
+                warn("Valor inválido para JumpPower.")
+            end
+
+        elseif command == "view" and args[2] then
+            local target = Players:FindFirstChild(args[2])
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+            else
+                warn("Jogador para view não encontrado ou sem personagem.")
+            end
+
+        elseif command == "unview" then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            else
+                Camera.CameraSubject = originalCameraSubject
+            end
+
+        elseif command == "xray" then
+            enableXray()
+
+        elseif command == "unxray" then
+            disableXray()
+        end
+    end
+end)
