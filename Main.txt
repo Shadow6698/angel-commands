@@ -69,6 +69,7 @@ local function showCommandsGui()
 ;portalgun → Ativa a Portal Gun
 ;void → Ativa o Void FE
 ;gravitygun → Ativa a Gravity Gun
+;angelhub → Ativa o Angel Hub
 ]]
 
     task.delay(8, function()
@@ -163,6 +164,9 @@ LocalPlayer.Chatted:Connect(function(msg)
 
         elseif command == "gravitygun" then
             loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
+
+        elseif command == "angelhub" then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/angelhub/main/Main.txt"))()
         end
     end
 end)
