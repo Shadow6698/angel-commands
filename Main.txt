@@ -1,12 +1,20 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+
+-- Espera o personagem carregar
+if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    LocalPlayer.CharacterAdded:Wait()
+end
+
+-- Espera o PlayerGui
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local prefix = ";"
 local originalCameraSubject = Camera.CameraSubject
+local xrayParts = {}
 
--- Atualiza referência do Humanoid para a câmera
 local function updateOriginalCameraSubject()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         originalCameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -15,18 +23,17 @@ end
 
 updateOriginalCameraSubject()
 LocalPlayer.CharacterAdded:Connect(function()
-    wait(1)
+    task.wait(1)
     updateOriginalCameraSubject()
 end)
 
--- Tela dos comandos (GUI)
+-- GUI com comandos
 local function showCommandsGui()
-    local screenGui = Instance.new("ScreenGui")
+    local screenGui = Instance.new("ScreenGui", PlayerGui)
     screenGui.Name = "ComandosInfoGui"
     screenGui.ResetOnSpawn = false
-    screenGui.Parent = PlayerGui
 
-    local textLabel = Instance.new("TextLabel")
+    local textLabel = Instance.new("TextLabel", screenGui)
     textLabel.Size = UDim2.new(0.5, 0, 0.4, 0)
     textLabel.Position = UDim2.new(0.25, 0, 0.3, 0)
     textLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -46,26 +53,23 @@ local function showCommandsGui()
 ;unview - Voltar para sua visão
 ;xray - Ver através das paredes
 ;unxray - Desativa o xray
-;coolkidhub - Ativa o COOLKIDHUB
+;coolkid - Ativa o COOLKID HUB
 ;portalgun - Ativa a Portal Gun
 ;void - Ativa o Void FE
 ]]
-    textLabel.Parent = screenGui
 
-    delay(8, function()
+    task.delay(8, function()
         screenGui:Destroy()
     end)
 end
 
 showCommandsGui()
 
--- Xray sistema
-local xrayParts = {}
-
+-- Xray
 local function enableXray()
     xrayParts = {}
     for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Transparency < 1 then
+        if part:IsA("BasePart") and part.Transparency < 1 and part.CanCollide then
             table.insert(xrayParts, {part = part, transparency = part.Transparency})
             part.Transparency = 0.7
         end
@@ -81,57 +85,41 @@ local function disableXray()
     xrayParts = {}
 end
 
--- Sistema de comandos pelo chat
+-- Comandos
 LocalPlayer.Chatted:Connect(function(msg)
     if msg:sub(1, #prefix) == prefix then
         local args = string.split(msg, " ")
         local command = string.lower(string.sub(args[1], #prefix + 1))
 
-        -- ;tp [nick]
         if command == "tp" and args[2] then
             local target = Players:FindFirstChild(args[2])
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character:MoveTo(target.Character.HumanoidRootPart.Position)
-            else
-                warn("Jogador não encontrado ou sem personagem.")
             end
 
-        -- ;tpsofa
         elseif command == "tpsofa" then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
-            else
-                warn("Personagem não encontrado.")
             end
 
-        -- ;speed [n]
         elseif command == "speed" and args[2] then
             local speed = tonumber(args[2])
             if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
-            else
-                warn("Valor inválido para velocidade.")
             end
 
-        -- ;jumppower [n]
         elseif command == "jumppower" and args[2] then
             local jp = tonumber(args[2])
             if jp and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = jp
-            else
-                warn("Valor inválido para JumpPower.")
             end
 
-        -- ;view [nick]
         elseif command == "view" and args[2] then
             local target = Players:FindFirstChild(args[2])
             if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
                 Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
-            else
-                warn("Jogador para view não encontrado ou sem personagem.")
             end
 
-        -- ;unview
         elseif command == "unview" then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -139,40 +127,20 @@ LocalPlayer.Chatted:Connect(function(msg)
                 Camera.CameraSubject = originalCameraSubject
             end
 
-        -- ;xray
         elseif command == "xray" then
             enableXray()
 
-        -- ;unxray
         elseif command == "unxray" then
             disableXray()
 
-        -- ;coolkidhub
-        elseif command == "coolkidhub" then
-            local success, err = pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
-            end)
-            if not success then
-                warn("Erro ao executar COOLKIDHUB:", err)
-            end
+        elseif command == "coolkid" then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
 
-        -- ;portalgun
         elseif command == "portalgun" then
-            local success, err = pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
-            end)
-            if not success then
-                warn("Erro ao executar PortalGun:", err)
-            end
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
 
-        -- ;void
         elseif command == "void" then
-            local success, err = pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
-            end)
-            if not success then
-                warn("Erro ao executar Void FE:", err)
-            end
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
         end
     end
 end)
