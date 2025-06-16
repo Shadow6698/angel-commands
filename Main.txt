@@ -1,3 +1,9 @@
+if getgenv().CommandScriptLoaded then
+    warn("Script já carregado!")
+    return
+end
+getgenv().CommandScriptLoaded = true
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -19,6 +25,10 @@ end
 -- GUI com comandos
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 task.spawn(function()
+    if PlayerGui:FindFirstChild("CmdGui") then
+        PlayerGui:FindFirstChild("CmdGui"):Destroy()
+    end
+
     local gui = Instance.new("ScreenGui", PlayerGui)
     gui.Name = "CmdGui"
     gui.ResetOnSpawn = false
@@ -143,6 +153,5 @@ LocalPlayer.Chatted:Connect(function(msg)
 
     elseif cmd == "lanterna" then
         loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
-
     end
 end)
