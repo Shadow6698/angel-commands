@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -7,190 +6,143 @@ local prefix = ";"
 local originalCameraSubject = Camera.CameraSubject
 local xrayParts = {}
 
--- Esperar personagem
-local function WaitForCharacter()
-    if not LocalPlayer.Character or not LocalPlayer.Character.Parent then
-        LocalPlayer.CharacterAdded:Wait()
-    end
-    repeat task.wait() until LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-end
-
--- Atualizar camera subject
-local function updateOriginalCameraSubject()
-    WaitForCharacter()
-    originalCameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-end
-updateOriginalCameraSubject()
-
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(1)
-    updateOriginalCameraSubject()
-end)
-
--- Busca de jogador por nome ou display parcial
+-- Função de busca rápida por jogador
 local function FindPlayer(name)
-    name = string.lower(name)
+    name = name:lower()
     for _, player in ipairs(Players:GetPlayers()) do
-        if string.find(string.lower(player.Name), name) or string.find(string.lower(player.DisplayName), name) then
+        if player.Name:lower():find(name) or player.DisplayName:lower():find(name) then
             return player
         end
     end
-    return nil
 end
 
 -- GUI com comandos
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local function showCommandsGui()
-    local screenGui = Instance.new("ScreenGui", PlayerGui)
-    screenGui.Name = "ComandosInfoGui"
-    screenGui.ResetOnSpawn = false
+task.spawn(function()
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "CmdGui"
+    gui.ResetOnSpawn = false
 
-    local textLabel = Instance.new("TextLabel", screenGui)
-    textLabel.Size = UDim2.new(0.5, 0, 0.4, 0)
-    textLabel.Position = UDim2.new(0.25, 0, 0.3, 0)
-    textLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    textLabel.BackgroundTransparency = 0.3
-    textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.TextWrapped = true
-    textLabel.Text = [[
-🔥 Comandos disponíveis 🔥
+    local label = Instance.new("TextLabel", gui)
+    label.Size = UDim2.new(0.5, 0, 0.5, 0)
+    label.Position = UDim2.new(0.25, 0, 0.25, 0)
+    label.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.BackgroundTransparency = 0.3
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.TextWrapped = true
+    label.Text = [[
+🔥 Comandos 🔥
 
-;tp [nick] → Teleporta até o jogador
-;tpsofa → Vai pro sofá secreto
-;speed [número] → Muda sua velocidade
-;jumppower [número] → Muda seu pulo
-;view [nick] → Ver câmera do jogador
-;unview → Voltar pra sua visão
-;xray → Ver através das paredes
-;unxray → Desativa o xray
-;coolkid → Ativa o COOLKID HUB
-;portalgun → Ativa a Portal Gun
-;void → Ativa o Void FE
-;gravitygun → Ativa a Gravity Gun
-;angelhub → Ativa o Angel Hub
-;duplicatorcars → Ativa duplicador de carros
-;spawncars → Spawnar carros
-;lanterna → Ativa lanterna
-;help1 → Ativa HelpBiel
-;help2 → Ativa HelpGeison
-;help3 → Ativa HelpAngel
+;tp [nick] → Teleportar
+;tpsofa → Sofá secreto
+;speed [número] → Velocidade
+;jumppower [número] → Pulo
+;view [nick] → Câmera de alguém
+;unview → Sua câmera
+;xray → Ativar Xray
+;unxray → Desativar Xray
+;coolkid → Coolkid Hub
+;portalgun → Portal Gun
+;void → Void FE
+;gravitygun → Gravity Gun
+;angelhub → Angel Hub
+;spawncars → Spawn Cars
+;duplicatorcars → Duplicar Carros
+;lanterna → Lanterna
 ]]
 
-    task.delay(8, function()
-        screenGui:Destroy()
-    end)
-end
+    task.wait(8)
+    gui:Destroy()
+end)
 
-showCommandsGui()
-
--- Xray
+-- Xray funções
 local function enableXray()
     xrayParts = {}
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Transparency < 1 and part.CanCollide then
-            table.insert(xrayParts, {part = part, transparency = part.Transparency})
-            part.Transparency = 0.7
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Transparency < 1 and v.CanCollide then
+            table.insert(xrayParts, {part = v, transparency = v.Transparency})
+            v.Transparency = 0.7
         end
     end
 end
 
 local function disableXray()
-    for _, data in pairs(xrayParts) do
-        if data.part and data.part.Parent then
-            data.part.Transparency = data.transparency
+    for _, v in pairs(xrayParts) do
+        if v.part and v.part.Parent then
+            v.part.Transparency = v.transparency
         end
     end
     xrayParts = {}
 end
 
--- Comandos
+-- Listener de comandos
 LocalPlayer.Chatted:Connect(function(msg)
-    if msg:sub(1, #prefix) == prefix then
-        local args = string.split(msg, " ")
-        local command = string.lower(string.sub(args[1], #prefix + 1))
+    if not msg:lower():sub(1, #prefix) == prefix then return end
 
-        WaitForCharacter()
+    local args = msg:sub(#prefix + 1):split(" ")
+    local cmd = args[1]:lower()
 
-        if command == "tp" and args[2] then
-            local target = FindPlayer(args[2])
-            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character:MoveTo(target.Character.HumanoidRootPart.Position)
-            else
-                warn("Jogador não encontrado.")
-            end
-
-        elseif command == "tpsofa" then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
-            end
-
-        elseif command == "speed" and args[2] then
-            local speed = tonumber(args[2])
-            if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
-            end
-
-        elseif command == "jumppower" and args[2] then
-            local jp = tonumber(args[2])
-            if jp and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = jp
-            end
-
-        elseif command == "view" and args[2] then
-            local target = FindPlayer(args[2])
-            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
-                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
-            else
-                warn("Jogador não encontrado para view.")
-            end
-
-        elseif command == "unview" then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            else
-                Camera.CameraSubject = originalCameraSubject
-            end
-
-        elseif command == "xray" then
-            enableXray()
-
-        elseif command == "unxray" then
-            disableXray()
-
-        elseif command == "coolkid" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
-
-        elseif command == "portalgun" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
-
-        elseif command == "void" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
-
-        elseif command == "gravitygun" then
-            loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
-
-        elseif command == "angelhub" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/angelhub/main/Main.txt"))()
-
-        elseif command == "duplicatorcars" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/kigredns/Flame-Object/refs/heads/main/script.lua"))()
-
-        elseif command == "spawncars" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/angel-commands/main/spawncars.lua"))()
-
-        elseif command == "lanterna" then
-            loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
-
-        elseif command == "help1" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/helpbiel/main/Main.txt"))()
-
-        elseif command == "help2" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/helpgeison/main/Main.txt"))()
-
-        elseif command == "help3" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/helpangel/main/Main.txt"))()
+    if cmd == "tp" and args[2] then
+        local target = FindPlayer(args[2])
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character:PivotTo(target.Character.HumanoidRootPart.CFrame)
         end
+
+    elseif cmd == "tpsofa" then
+        LocalPlayer.Character:PivotTo(CFrame.new(-83, 21, -131))
+
+    elseif cmd == "speed" and args[2] then
+        local speed = tonumber(args[2])
+        if speed then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
+        end
+
+    elseif cmd == "jumppower" and args[2] then
+        local jp = tonumber(args[2])
+        if jp then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = jp
+        end
+
+    elseif cmd == "view" and args[2] then
+        local target = FindPlayer(args[2])
+        if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+            Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+        end
+
+    elseif cmd == "unview" then
+        Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+    elseif cmd == "xray" then
+        enableXray()
+
+    elseif cmd == "unxray" then
+        disableXray()
+
+    elseif cmd == "coolkid" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
+
+    elseif cmd == "portalgun" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
+
+    elseif cmd == "void" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
+
+    elseif cmd == "gravitygun" then
+        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
+
+    elseif cmd == "angelhub" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/angelhub/main/Main.txt"))()
+
+    elseif cmd == "spawncars" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/spawncars/main/Main.txt"))()
+
+    elseif cmd == "duplicatorcars" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/kigredns/Flame-Object/refs/heads/main/script.lua"))()
+
+    elseif cmd == "lanterna" then
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
+
     end
 end)
