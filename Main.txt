@@ -139,7 +139,7 @@ local function OpenCmdGui()
 ;tp drones
 ;tp fazenda1
 ;tp fazenda2
-;tp praca
+;tp praça
 ;tp montanha
 ;tp posto
 ;tp loja
@@ -215,7 +215,7 @@ local teleportAliases = {
     drones = Vector3.new(-680, 252, 762),
     fazenda1 = Vector3.new(-851, 6, -57),
     fazenda2 = Vector3.new(-863, 6, -375),
-    praca = Vector3.new(-13, 6, -17),
+    praça = Vector3.new(-13, 6, -17),
     montanha = Vector3.new(-580, 1, 1026),
     posto = Vector3.new(133, 2, -338),
     loja = Vector3.new(-39, 2, 255),
