@@ -134,10 +134,8 @@ local function OpenCmdGui()
 ;tp praia3
 ;tp abandonada
 ;tp maquinas
-;tp prainanormal
 ;tp iate
 ;tp cabana
-;tp priavermelho
 ;tp drones
 ;tp fazenda1
 ;tp fazenda2
@@ -212,10 +210,8 @@ local teleportAliases = {
     praia3 = Vector3.new(15, 4, 1460),       -- mesma que priavermelho
     abandonada = Vector3.new(1044, 8, 54),
     maquinas = Vector3.new(235, 4, 813),
-    prainanormal = Vector3.new(-218, 1, 760),
     iate = Vector3.new(-125, 33, 856),
     cabana = Vector3.new(-249, 6, 1078),
-    priavermelho = Vector3.new(15, 4, 1460),
     drones = Vector3.new(-680, 252, 762),
     fazenda1 = Vector3.new(-851, 6, -57),
     fazenda2 = Vector3.new(-863, 6, -375),
