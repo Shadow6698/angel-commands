@@ -9,7 +9,6 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 local prefix = ";"
-local originalCameraSubject = Camera.CameraSubject
 local xrayParts = {}
 
 local function FindPlayer(name)
@@ -22,10 +21,11 @@ local function FindPlayer(name)
 end
 
 local function OpenCmdGui()
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
+    if not PlayerGui then return end
 
     if PlayerGui:FindFirstChild("CmdGui") then
-        PlayerGui:FindFirstChild("CmdGui"):Destroy()
+        PlayerGui.CmdGui:Destroy()
     end
 
     local gui = Instance.new("ScreenGui", PlayerGui)
@@ -143,35 +143,9 @@ local function OpenCmdGui()
 ;tp loja
 ]]
 
-    return gui
 end
 
-task.spawn(function()
-    local gui = OpenCmdGui()
-    task.wait(5)
-    if gui and gui.Parent then
-        gui:Destroy()
-    end
-end)
-
-local function enableXray()
-    xrayParts = {}
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") and v.Transparency < 1 and v.CanCollide then
-            table.insert(xrayParts, {part = v, transparency = v.Transparency})
-            v.Transparency = 0.7
-        end
-    end
-end
-
-local function disableXray()
-    for _, v in pairs(xrayParts) do
-        if v.part and v.part.Parent then
-            v.part.Transparency = v.transparency
-        end
-    end
-    xrayParts = {}
-end
+OpenCmdGui() -- Abre logo que script carrega
 
 local teleportAliases = {
     salao = Vector3.new(-76, 4, -123),
@@ -216,71 +190,80 @@ local teleportAliases = {
     loja = Vector3.new(-39, 2, 255),
 }
 
+local function enableXray()
+    xrayParts = {}
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Transparency < 1 and v.CanCollide then
+            table.insert(xrayParts, {part = v, transparency = v.Transparency})
+            v.Transparency = 0.7
+        end
+    end
+end
+
+local function disableXray()
+    for _, v in pairs(xrayParts) do
+        if v.part and v.part.Parent then
+            v.part.Transparency = v.transparency
+        end
+    end
+    xrayParts = {}
+end
+
 LocalPlayer.Chatted:Connect(function(msg)
     if msg:sub(1, #prefix):lower() ~= prefix then return end
-
     local args = msg:sub(#prefix + 1):lower():split(" ")
     local cmd = args[1]
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
 
     if cmd == "tp" and args[2] then
         local place = args[2]
         local pos = teleportAliases[place]
-        local char = LocalPlayer.Character
-        if pos and char and char:FindFirstChild("HumanoidRootPart") then
+        if pos and char:FindFirstChild("HumanoidRootPart") then
             char.HumanoidRootPart.CFrame = CFrame.new(pos)
         else
             local target = FindPlayer(place)
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-            else
-                warn("Localização ou jogador não encontrado: "..place)
+                char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
             end
         end
-        return
-    end
 
-    if cmd == "tpsofa" then
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local sofaPos = CFrame.new(-83, 21, -131)
-            char.HumanoidRootPart.CFrame = sofaPos
-            task.delay(1.5, function()
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    char.HumanoidRootPart.CFrame = sofaPos
-                    char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Seated)
-                end
-            end)
+    elseif cmd == "tpsofa" then
+        if char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
+            humanoid:ChangeState(Enum.HumanoidStateType.Seated)
         end
 
     elseif cmd == "speed" and args[2] then
-        local speed = tonumber(args[2])
-        if speed then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
-        end
+        humanoid.WalkSpeed = tonumber(args[2]) or 16
 
     elseif cmd == "resetspeed" then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+        humanoid.WalkSpeed = 16
 
     elseif cmd == "jumppower" and args[2] then
-        local jp = tonumber(args[2])
-        if jp then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = jp
-        end
+        humanoid.JumpPower = tonumber(args[2]) or 50
 
     elseif cmd == "resetjp" then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = 50
+        humanoid.JumpPower = 50
 
     elseif cmd == "speedsupreme" then
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt"))()
 
     elseif cmd == "view" and args[2] then
         local target = FindPlayer(args[2])
-        if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
-            Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+        if target and target.Character then
+            local hum = target.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                Camera.CameraSubject = hum
+            end
         end
 
     elseif cmd == "unview" then
-        Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        Camera.CameraSubject = humanoid
 
     elseif cmd == "xray" then
         enableXray()
@@ -310,7 +293,8 @@ LocalPlayer.Chatted:Connect(function(msg)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
 
     elseif cmd == "hub1" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Luscaa22/Calabocaa/refs/heads/main/ChaosHub"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"))();
+
 
     elseif cmd == "emotes" then
         loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
