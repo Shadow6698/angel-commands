@@ -7,9 +7,13 @@ getgenv().CommandScriptLoaded = true
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-
 local prefix = ";"
 local xrayParts = {}
+
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+LocalPlayer.CharacterAdded:Connect(function(char)
+    character = char
+end)
 
 local function FindPlayer(name)
     name = name:lower()
@@ -190,6 +194,22 @@ local teleportAliases = {
     loja = Vector3.new(-39, 2, 255),
 }
 
+local scriptsCache = {}
+
+local function LoadScript(url)
+    if scriptsCache[url] then
+        return scriptsCache[url]
+    else
+        local s, err = pcall(function()
+            local code = game:HttpGet(url)
+            local func = loadstring(code)
+            scriptsCache[url] = func
+        end)
+        if not s then warn("Erro ao carregar script: "..err) end
+        return scriptsCache[url]
+    end
+end
+
 local function enableXray()
     xrayParts = {}
     for _, v in pairs(workspace:GetDescendants()) do
@@ -214,27 +234,28 @@ LocalPlayer.Chatted:Connect(function(msg)
     local args = msg:sub(#prefix + 1):lower():split(" ")
     local cmd = args[1]
 
-    local char = LocalPlayer.Character
-    if not char then return end
+    if not character or not character.Parent then
+        return
+    end
 
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
 
     if cmd == "tp" and args[2] then
         local place = args[2]
         local pos = teleportAliases[place]
-        if pos and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = CFrame.new(pos)
+        if pos and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(pos)
         else
             local target = FindPlayer(place)
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+                character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
             end
         end
 
     elseif cmd == "tpsofa" then
-        if char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
+        if character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
             humanoid:ChangeState(Enum.HumanoidStateType.Seated)
         end
 
@@ -251,7 +272,8 @@ LocalPlayer.Chatted:Connect(function(msg)
         humanoid.JumpPower = 50
 
     elseif cmd == "speedsupreme" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt"))()
+        local func = LoadScript("https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt")
+        if func then func() end
 
     elseif cmd == "view" and args[2] then
         local target = FindPlayer(args[2])
@@ -272,32 +294,40 @@ LocalPlayer.Chatted:Connect(function(msg)
         disableXray()
 
     elseif cmd == "coolkid" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
+        local func = LoadScript("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt")
+        if func then func() end
 
     elseif cmd == "portalgun" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
+        local func = LoadScript("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt")
+        if func then func() end
 
     elseif cmd == "void" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
+        local func = LoadScript("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt")
+        if func then func() end
 
     elseif cmd == "gravitygun" then
-        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
+        local func = LoadScript("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332")
+        if func then func() end
 
     elseif cmd == "angelhub" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/angelhub/main/Main.txt"))()
+        local func = LoadScript("https://raw.githubusercontent.com/Shadow6698/angelhub/main/Main.txt")
+        if func then func() end
 
     elseif cmd == "lanterna" then
-        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
+        local func = LoadScript("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768")
+        if func then func() end
 
     elseif cmd == "cmd1" then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+        local func = LoadScript("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua")
+        if func then func() end
 
     elseif cmd == "hub1" then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"))();
-
+        local func = LoadScript("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua")
+        if func then func() end
 
     elseif cmd == "emotes" then
-        loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
+        local func = LoadScript("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849")
+        if func then func() end
 
     elseif cmd == "cmds" then
         OpenCmdGui()
