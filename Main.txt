@@ -7,10 +7,10 @@ getgenv().CommandScriptLoaded = true
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+
 local prefix = ";"
 local xrayParts = {}
 
--- 📌 Função para encontrar jogadores pelo nome/apelido
 local function FindPlayer(name)
     name = name:lower()
     for _, player in ipairs(Players:GetPlayers()) do
@@ -20,11 +20,13 @@ local function FindPlayer(name)
     end
 end
 
--- 📌 Abre a GUI de comandos
 local function OpenCmdGui()
     local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not PlayerGui then return end
-    if PlayerGui:FindFirstChild("CmdGui") then PlayerGui.CmdGui:Destroy() end
+
+    if PlayerGui:FindFirstChild("CmdGui") then
+        PlayerGui.CmdGui:Destroy()
+    end
 
     local gui = Instance.new("ScreenGui", PlayerGui)
     gui.Name = "CmdGui"
@@ -35,23 +37,32 @@ local function OpenCmdGui()
     frame.Position = UDim2.new(0.3, 0, 0.23, 0)
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 1
 
     local close = Instance.new("TextButton", frame)
-    close.Size = UDim2.new(0, 30, 0, 30)
-    close.Position = UDim2.new(1, -35, 0, 5)
+    close.Size = UDim2.new(0, 35, 0, 35)
+    close.Position = UDim2.new(1, -40, 0, -15)
     close.Text = "X"
     close.TextColor3 = Color3.new(1, 1, 1)
     close.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    close.BorderSizePixel = 0
     close.Font = Enum.Font.SourceSansBold
     close.TextSize = 13
-    close.MouseButton1Click:Connect(function() gui:Destroy() end)
+    close.ZIndex = 10
+    close.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
 
     local scroll = Instance.new("ScrollingFrame", frame)
     scroll.Size = UDim2.new(1, -10, 1, -10)
     scroll.Position = UDim2.new(0, 5, 0, 5)
     scroll.CanvasSize = UDim2.new(0, 0, 4, 0)
-    scroll.ScrollBarThickness = 8
     scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 8
+    scroll.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+    scroll.BorderSizePixel = 0
+    scroll.ZIndex = 1
 
     local label = Instance.new("TextLabel", scroll)
     label.Size = UDim2.new(1, -10, 0, 1800)
@@ -63,6 +74,7 @@ local function OpenCmdGui()
     label.TextWrapped = true
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Top
+    label.ZIndex = 1
     label.Text = [[🔥 COMANDOS 🔥
 
 ;tp [apelido ou nick] → Teleportar até local ou jogador
