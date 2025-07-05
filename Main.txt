@@ -7,10 +7,10 @@ getgenv().CommandScriptLoaded = true
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-
 local prefix = ";"
 local xrayParts = {}
 
+-- 📌 Função para encontrar jogador
 local function FindPlayer(name)
     name = name:lower()
     for _, player in ipairs(Players:GetPlayers()) do
@@ -20,6 +20,7 @@ local function FindPlayer(name)
     end
 end
 
+-- 📌 Função para abrir GUI de comandos
 local function OpenCmdGui()
     local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not PlayerGui then return end
@@ -42,7 +43,7 @@ local function OpenCmdGui()
 
     local close = Instance.new("TextButton", frame)
     close.Size = UDim2.new(0, 35, 0, 35)
-    close.Position = UDim2.new(1, -40, 0, -15)
+    close.Position = UDim2.new(1, -38, 0, 2)
     close.Text = "X"
     close.TextColor3 = Color3.new(1, 1, 1)
     close.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
@@ -100,52 +101,18 @@ local function OpenCmdGui()
 ;cmds → Abrir este GUI
 
 🏠 TELEPORTS (apelidos)
-;tp salao
-;tp sofa
-;tp doceria
-;tp jogos
-;tp delegacia
-;tp hospital
-;tp banco
-;tp bombeiros
-;tp cemiterio
-;tp escola
-;tp creche
-;tp caixas
-;tp lanches
-;tp livraria
-;tp celulares
-;tp coffes
-;tp veterinario
-;tp dentista
-;tp banco2
-;tp hotel
-;tp hamburgueria
-;tp aeroporto
-;tp shopping
-;tp ap1
-;tp ap2
-;tp igreja
-;tp praia1
-;tp praia2
-;tp praia3
-;tp abandonada
-;tp maquinas
-;tp iate
-;tp cabana
-;tp drones
-;tp fazenda1
-;tp fazenda2
-;tp praça
-;tp montanha
-;tp posto
-;tp loja
-;tp parque]]
+;tp salao, ;tp sofa, ;tp doceria, ;tp jogos
+;tp delegacia, ;tp hospital, ;tp banco, ;tp bombeiros
+;tp cemiterio, ;tp escola, ;tp creche, ;tp caixas
+;tp lanches, ;tp livraria, ;tp celulares, ;tp coffes
+;tp veterinario, ;tp dentista, ;tp banco2, ;tp hotel
+;tp hamburgueria, ;tp aeroporto, ;tp shopping
+;tp ap1, ;tp ap2, ;tp igreja, ;tp praia1, praia2, praia3
+;tp abandonada, maquinas, iate, cabana, drones
+;tp fazenda1, fazenda2, praça, montanha, posto, loja, parque]]
 end
 
-OpenCmdGui()
-
--- 📌 Locais para teleportar com apelido
+-- 📌 Locais pré-definidos
 local teleportAliases = {
     salao = Vector3.new(-76, 4, -123),
     sofa = Vector3.new(-82, 22, -128),
@@ -210,29 +177,31 @@ local function disableXray()
     xrayParts = {}
 end
 
--- 📌 Execução dos comandos
-LocalPlayer.Chatted:Connect(function(msg)
+-- 📌 Comandos
+local function OnChatted(msg)
     if not msg or msg:sub(1, #prefix):lower() ~= prefix then return end
+
     local success, err = pcall(function()
         local args = msg:sub(#prefix + 1):lower():split(" ")
         local cmd = args[1]
-        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local char = LocalPlayer.Character
         local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-        if not humanoid then return end
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not humanoid or not root then return end
 
         if cmd == "tp" and args[2] then
             local place = args[2]
             local pos = teleportAliases[place]
-            if pos and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = CFrame.new(pos)
+            if pos then
+                root.CFrame = CFrame.new(pos)
             else
                 local target = FindPlayer(place)
                 if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                    char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+                    root.CFrame = target.Character.HumanoidRootPart.CFrame
                 end
             end
         elseif cmd == "tpsofa" then
-            char.HumanoidRootPart.CFrame = CFrame.new(-83, 21, -131)
+            root.CFrame = CFrame.new(-83, 21, -131)
             humanoid:ChangeState(Enum.HumanoidStateType.Seated)
         elseif cmd == "speed" and args[2] then
             humanoid.WalkSpeed = tonumber(args[2]) or 16
@@ -243,7 +212,9 @@ LocalPlayer.Chatted:Connect(function(msg)
         elseif cmd == "resetjp" then
             humanoid.JumpPower = 50
         elseif cmd == "speedsupreme" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt"))()
+            end)
         elseif cmd == "view" and args[2] then
             local target = FindPlayer(args[2])
             if target and target.Character then
@@ -257,28 +228,58 @@ LocalPlayer.Chatted:Connect(function(msg)
         elseif cmd == "unxray" then
             disableXray()
         elseif cmd == "coolkid" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"))()
+            end)
         elseif cmd == "portalgun" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"))()
+            end)
         elseif cmd == "void" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"))()
+            end)
         elseif cmd == "gravitygun" then
-            loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"))()
+            end)
         elseif cmd == "angelhub" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/hubmystery/main/Main.txt"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/hubmystery/main/Main.txt"))()
+            end)
         elseif cmd == "lanterna" then
-            loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flashlight-Script-40768"))()
+            end)
         elseif cmd == "cmd1" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+            end)
         elseif cmd == "hub1" then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"))()
+            end)
         elseif cmd == "emotes" then
-            loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
+            task.spawn(function()
+                loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
+            end)
         elseif cmd == "cmds" then
             OpenCmdGui()
         end
     end)
+
     if not success then
         warn("Erro ao executar comando: " .. tostring(err))
     end
-end)
+end
+
+-- ✅ Conectar evento após Character estar pronto
+if LocalPlayer.Character then
+    OnChatted(prefix.."cmds")
+    LocalPlayer.Chatted:Connect(OnChatted)
+else
+    LocalPlayer.CharacterAdded:Wait()
+    task.wait(1)
+    OnChatted(prefix.."cmds")
+    LocalPlayer.Chatted:Connect(OnChatted)
+end
