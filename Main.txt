@@ -66,7 +66,7 @@ local function OpenCmdGui()
     scroll.ZIndex = 1
 
     local label = Instance.new("TextLabel", scroll)
-    label.Size = UDim2.new(1, -10, 0, 1800)
+    label.Size = UDim2.new(1, -10, 0, 1900)
     label.Position = UDim2.new(0, 5, 0, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = Color3.new(1, 1, 1)
@@ -98,6 +98,7 @@ local function OpenCmdGui()
 ;cmd1 → Nameless Admin
 ;hub1 → Chaos Hub
 ;emotes → Emotes Brookhaven RP
+;gigante → Avatar gigante FE
 ;cmds → Abrir este GUI
 
 🏠 TELEPORTS (apelidos)
@@ -262,6 +263,10 @@ local function OnChatted(msg)
         elseif cmd == "emotes" then
             task.spawn(function()
                 loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
+            end)
+        elseif cmd == "gigante" then
+            task.spawn(function()
+                loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-FE-BIG-AVATAR-43381"))()
             end)
         elseif cmd == "cmds" then
             OpenCmdGui()
