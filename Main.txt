@@ -10,6 +10,41 @@ local Camera = workspace.CurrentCamera
 local prefix = ";"
 local xrayParts = {}
 
+-- Função para mostrar mensagem no centro da tela por segundos
+local function ShowMessage(text, duration)
+    duration = duration or 4
+    local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
+    if not PlayerGui then return end
+
+    -- Remove se já existir
+    local existing = PlayerGui:FindFirstChild("AdmMessageGui")
+    if existing then existing:Destroy() end
+
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "AdmMessageGui"
+    gui.ResetOnSpawn = false
+
+    local label = Instance.new("TextLabel", gui)
+    label.Size = UDim2.new(0.6, 0, 0.1, 0)
+    label.Position = UDim2.new(0.2, 0, 0.45, 0)
+    label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    label.BackgroundTransparency = 0.5
+    label.BorderSizePixel = 0
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(255, 0, 0)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 32
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.ZIndex = 50
+
+    task.delay(duration, function()
+        if gui and gui.Parent then
+            gui:Destroy()
+        end
+    end)
+end
+
 -- Função para encontrar jogador pelo nome ou displayName
 local function FindPlayer(name)
     name = name:lower()
@@ -298,5 +333,6 @@ end
 -- Conectar o evento Chatted imediatamente, sem esperar personagem
 LocalPlayer.Chatted:Connect(OnChatted)
 
--- Mostrar GUI de comandos logo que o script carrega
+-- Mostrar GUI de comandos e mensagem ao carregar script
 OnChatted(prefix .. "cmds")
+ShowMessage("OLHA O ADM AI", 4)
