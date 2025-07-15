@@ -10,17 +10,14 @@ local Camera = workspace.CurrentCamera
 local prefix = ";"
 local xrayParts = {}
 
--- Cache para otimização
 local playerCache = {}
 local lastCacheUpdate = 0
 
--- Função para mostrar mensagem no centro da tela
 local function ShowMessage(text, duration)
     duration = duration or 2
     local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not PlayerGui then return end
 
-    -- Remove se já existir
     local existing = PlayerGui:FindFirstChild("AdmMessageGui")
     if existing then existing:Destroy() end
 
@@ -49,12 +46,9 @@ local function ShowMessage(text, duration)
     end)
 end
 
--- Função otimizada para encontrar jogador com cache
 local function FindPlayer(name)
     name = name:lower()
     local currentTime = tick()
-    
-    -- Atualiza cache a cada 2 segundos
     if currentTime - lastCacheUpdate > 2 then
         playerCache = {}
         for _, player in ipairs(Players:GetPlayers()) do
@@ -64,8 +58,6 @@ local function FindPlayer(name)
         end
         lastCacheUpdate = currentTime
     end
-    
-    -- Busca no cache
     for player, data in pairs(playerCache) do
         if data.name:find(name) or data.display:find(name) then
             return player
@@ -73,7 +65,6 @@ local function FindPlayer(name)
     end
 end
 
--- Função para abrir GUI de comandos
 local function OpenCmdGui()
     local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not PlayerGui then return end
@@ -119,7 +110,7 @@ local function OpenCmdGui()
     scroll.ZIndex = 1
 
     local label = Instance.new("TextLabel", scroll)
-    label.Size = UDim2.new(1, -10, 0, 1800)
+    label.Size = UDim2.new(1, -10, 0, 2000)
     label.Position = UDim2.new(0, 5, 0, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = Color3.new(1, 1, 1)
@@ -151,6 +142,7 @@ local function OpenCmdGui()
 ;cmd1 → Nameless Admin
 ;hub1 → Chaos Hub
 ;emotes → Emotes Brookhaven RP
+;gigante → Ativar avatar gigante (FE)
 ;cmds → Abrir este GUI
 
 🏠 TELEPORTS (apelidos)
@@ -165,7 +157,6 @@ local function OpenCmdGui()
 ;tp fazenda1, fazenda2, praça, montanha, posto, loja, parque]]
 end
 
--- Locais pré-definidos para teleportar
 local teleportAliases = {
     salao = Vector3.new(-76, 4, -123),
     sofa = Vector3.new(-82, 22, -128),
@@ -210,23 +201,18 @@ local teleportAliases = {
     parque = Vector3.new(180, 5, -173),
 }
 
--- Funções para ativar e desativar XRAY otimizadas
 local function enableXray()
     xrayParts = {}
-    local parts = workspace:GetDescendants()
-    
-    for i = 1, #parts do
-        local v = parts[i]
+    for _, v in ipairs(workspace:GetDescendants()) do
         if v:IsA("BasePart") and v.Transparency < 1 and v.CanCollide then
-            xrayParts[#xrayParts + 1] = {part = v, transparency = v.Transparency}
+            table.insert(xrayParts, {part = v, transparency = v.Transparency})
             v.Transparency = 0.7
         end
     end
 end
 
 local function disableXray()
-    for i = 1, #xrayParts do
-        local v = xrayParts[i]
+    for _, v in ipairs(xrayParts) do
         if v.part and v.part.Parent then
             v.part.Transparency = v.transparency
         end
@@ -234,7 +220,6 @@ local function disableXray()
     xrayParts = {}
 end
 
--- Função otimizada para aguardar personagem
 local function GetCharacterComponents()
     local char = LocalPlayer.Character
     if char then
@@ -247,7 +232,6 @@ local function GetCharacterComponents()
     return nil, nil, nil
 end
 
--- Função que processa os comandos do chat
 local function OnChatted(msg)
     if not msg or msg:sub(1, #prefix):lower() ~= prefix then return end
 
@@ -255,19 +239,15 @@ local function OnChatted(msg)
         local args = msg:sub(#prefix + 1):lower():split(" ")
         local cmd = args[1]
 
-        -- Verifica componentes do personagem (sem delay)
         local char, humanoid, root = GetCharacterComponents()
-        if not humanoid or not root then
-            return
-        end
+        if not humanoid or not root then return end
 
         if cmd == "tp" and args[2] then
-            local place = args[2]
-            local pos = teleportAliases[place]
+            local pos = teleportAliases[args[2]]
             if pos then
                 root.CFrame = CFrame.new(pos)
             else
-                local target = FindPlayer(place)
+                local target = FindPlayer(args[2])
                 if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                     root.CFrame = target.Character.HumanoidRootPart.CFrame
                 end
@@ -315,6 +295,8 @@ local function OnChatted(msg)
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"))()
         elseif cmd == "emotes" then
             loadstring(game:HttpGet("https://scriptblox.com/raw/Brookhaven-RP-all-emotes-6849"))()
+        elseif cmd == "gigante" then
+            loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-FE-BIG-AVATAR-43381"))()
         elseif cmd == "cmds" then
             OpenCmdGui()
         end
@@ -325,9 +307,7 @@ local function OnChatted(msg)
     end
 end
 
--- Conectar o evento Chatted
 LocalPlayer.Chatted:Connect(OnChatted)
 
--- Mostrar GUI de comandos e mensagem ao carregar script
 OnChatted(prefix .. "cmds")
 ShowMessage("EITA PORRA OLHA O ADM AI", 2)
