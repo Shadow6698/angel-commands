@@ -167,6 +167,7 @@ local function OpenCmdGui()
 ;emotes → Emotes Brookhaven RP
 ;gigante → Modo Gigante
 ;bola → Virar Bola
+;bughub → Bug Hub Script
 ;chat → Ativar/Desativar escuta do chat
 ;cmds → Abrir este GUI
 
@@ -177,9 +178,12 @@ local function OpenCmdGui()
 ;tp lanches, ;tp livraria, ;tp celulares, ;tp coffes
 ;tp veterinario, ;tp dentista, ;tp banco2, ;tp hotel
 ;tp hamburgueria, ;tp aeroporto, ;tp shopping
-;tp ap1, ;tp ap2, ;tp igreja, ;tp praia1, praia2, praia3
-;tp abandonada, maquinas, iate, cabana, drones
-;tp fazenda1, fazenda2, praça, montanha, posto, loja, parque]]
+;tp ap1, ;tp ap2, ;tp igreja, ;tp praia1, ;tp praia2, ;tp praia3
+;tp abandonada, ;tp maquinas, ;tp iate, ;tp cabana, ;tp drones
+;tp fazenda1, ;tp fazenda2, ;tp praça, ;tp montanha, ;tp posto
+;tp loja, ;tp parque
+]]
+
 end
 
 -- Locais pré-definidos
@@ -265,7 +269,6 @@ local function GetCharacterComponents()
 end
 
 -- Sistema de execução de scripts externos sem delay
-local scriptQueue = {}
 local function ExecuteScript(url)
     local success, result = pcall(function()
         return game:HttpGet(url)
@@ -337,6 +340,8 @@ local function ProcessCommand(cmd, args, char, humanoid, root)
         ExecuteScript("https://rawscripts.net/raw/Brookhaven-RP-FE-BIG-AVATAR-43381")
     elseif cmd == "bola" then
         ExecuteScript("https://rawscripts.net/raw/Universal-Script-Fe-ball-rolL-9835")
+    elseif cmd == "bughub" then
+        ExecuteScript("https://rawscripts.net/raw/Brookhaven-RP-Glitch-fe-44756")
     elseif cmd == "chat" then
         chatEnabled = not chatEnabled
         ShowMessage(chatEnabled and "Chat ativado!" or "Chat desativado!", 1)
@@ -368,7 +373,7 @@ LocalPlayer.Chatted:Connect(OnChatted)
 
 -- Inicialização
 RunService.Heartbeat:Connect(function()
-    -- Atualização contínua do cache se necessário
+    -- Atualização contínua do cache se necessário (se quiser)
 end)
 
 -- Mostrar GUI e mensagem inicial
