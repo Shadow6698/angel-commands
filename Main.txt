@@ -81,7 +81,8 @@ local scriptUrls = {
     
     -- Scripts extras funcionais
     infinite = "https://pastebin.com/raw/zqyDSUWX",
-    noclip = "https://pastebin.com/raw/BK4Q0DfP"
+    noclip = "https://pastebin.com/raw/BK4Q0DfP",
+    invisible = "https://rawscripts.net/raw/Brookhaven-RP-Avatar-invisible-45072"
 }
 
 -- Cache de personagem para eliminar lag
@@ -373,6 +374,7 @@ local function ExecuteCommand(cmd, args)
 ;unview → Voltar câmera
 ;xray → Ativar xray
 ;unxray → Desativar xray
+;invisible → Ficar invisível
 ;chat → Toggle chat
 
 🔥 SCRIPTS EXTERNOS
@@ -391,6 +393,7 @@ local function ExecuteCommand(cmd, args)
 ;bughub → Bug Hub ❓
 ;infinite → Infinite Jump ✅
 ;noclip → No Clip ✅
+;invisible → Ficar Invisível ❓
 
 🏠 TELEPORTS INSTANTÂNEOS
 ;tp salao → Salão de festa
