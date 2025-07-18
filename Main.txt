@@ -1,21 +1,32 @@
 -- Script Executor para Roblox com comandos de chat
 -- Prefix: ;
--- Comandos básicos + Scripts externos
+-- Comandos básicos + Scripts externos + Teleportes + Funcionalidades especiais
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local playerGui = player:WaitForChild("PlayerGui")
+local camera = Workspace.CurrentCamera
 
 -- Valores padrão
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
+
+-- Variáveis para controle da câmera
+local originalCameraSubject = camera.CameraSubject
+
+-- Variáveis para controle do glue
+local glueConnection = nil
+local gluedToPlayer = nil
 
 -- Lista de scripts externos
 local externalScripts = {
@@ -90,6 +101,10 @@ local externalScripts = {
     ["hub2"] = {
         name = "Coquette Hub",
         url = "https://rawscripts.net/raw/Brookhaven-RP-Coquette-Hub-41921"
+    },
+    ["godmod"] = {
+        name = "God Mode",
+        url = "https://raw.githubusercontent.com/Shadow6698/godmode/main/Main.txt"
     }
 }
 
@@ -138,9 +153,9 @@ local teleportLocations = {
     ["parque"] = {name = "Parque", cframe = CFrame.new(180, 5, -173)}
 }
 
--- Função para criar notificação de comando
+-- Função para criar notificação de comando (SEM DELAY)
 local function createCommandNotification(commandText)
-    spawn(function()
+    coroutine.wrap(function()
         -- Remove notificação existente se houver
         local existingNotif = playerGui:FindFirstChild("CommandNotification")
         if existingNotif then
@@ -156,7 +171,7 @@ local function createCommandNotification(commandText)
         -- Frame da notificação
         local notifFrame = Instance.new("Frame")
         notifFrame.Size = UDim2.new(0, 300, 0, 50)
-        notifFrame.Position = UDim2.new(0.5, -150, 0, -60) -- Começa fora da tela
+        notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
         notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         notifFrame.BorderSizePixel = 0
         notifFrame.Parent = notifGui
@@ -177,21 +192,21 @@ local function createCommandNotification(commandText)
         notifText.Size = UDim2.new(1, -20, 1, 0)
         notifText.Position = UDim2.new(0, 10, 0, 0)
         notifText.BackgroundTransparency = 1
-        notifText.Text = "Comando executado: " .. commandText
+        notifText.Text = "Comando: " .. commandText
         notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
         notifText.TextScaled = true
         notifText.Font = Enum.Font.SourceSansBold
         notifText.Parent = notifFrame
         
         -- Animação de entrada
-        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Position = UDim2.new(0.5, -150, 0, 20)
         })
         tweenIn:Play()
         
-        -- Aguardar 2 segundos e fazer animação de saída
-        wait(2)
-        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        -- Aguardar 1.5 segundos e fazer animação de saída
+        wait(1.5)
+        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(0.5, -150, 0, -60)
         })
         tweenOut:Play()
@@ -200,7 +215,38 @@ local function createCommandNotification(commandText)
         tweenOut.Completed:Connect(function()
             notifGui:Destroy()
         end)
-    end)
+    end)()
+end
+
+-- Função para executar script externo
+local function executeExternalScript(url, name)
+    coroutine.wrap(function()
+        local success, result = pcall(function()
+            local script = game:HttpGet(url)
+            local func = loadstring(script)
+            if func then
+                func()
+                print("Script executado: " .. name)
+            else
+                print("Erro ao carregar: " .. name)
+            end
+        end)
+        
+        if not success then
+            print("Erro ao executar " .. name)
+        end
+    end)()
+end
+
+-- Função para encontrar jogador por nome parcial
+local function findPlayer(name)
+    name = name:lower()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower():find(name) or p.DisplayName:lower():find(name) then
+            return p
+        end
+    end
+    return nil
 end
 
 -- Função para criar GUI de comandos
@@ -320,6 +366,10 @@ local function createCommandsGUI()
     createCommandLabel(";tp [nome] - Teleporta para jogador", false)
     createCommandLabel(";tp random - Teleporta para jogador aleatório", false)
     createCommandLabel(";tp spawn - Teleporta para o spawn", false)
+    createCommandLabel(";view [nome] - Visualiza outro jogador", false)
+    createCommandLabel(";unview - Volta para sua visão", false)
+    createCommandLabel(";glue [nome] - Gruda nas costas do jogador", false)
+    createCommandLabel(";unglue - Desgruda do jogador", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -357,7 +407,7 @@ local function createCommandsGUI()
     
     -- Animação de entrada
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
-    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 450, 0, 500)
     })
     tween:Play()
@@ -367,35 +417,8 @@ local function createCommandsGUI()
         scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
     end)
 end
-local function executeExternalScript(url, name)
-    local success, result = pcall(function()
-        local script = game:HttpGet(url)
-        local func = loadstring(script)
-        if func then
-            func()
-            print("Script executado com sucesso: " .. name)
-        else
-            print("Erro ao carregar o script: " .. name)
-        end
-    end)
-    
-    if not success then
-        print("Erro ao executar " .. name .. ": " .. tostring(result))
-    end
-end
 
--- Função para encontrar jogador por nome parcial
-local function findPlayer(name)
-    name = name:lower()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p.Name:lower():find(name) or p.DisplayName:lower():find(name) then
-            return p
-        end
-    end
-    return nil
-end
-
--- Função para processar comandos
+-- Função para processar comandos (SEM DELAYS)
 local function processCommand(message)
     local prefix = ";"
     
@@ -441,7 +464,7 @@ local function processCommand(message)
         if speed then
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.WalkSpeed = speed
-                print("Velocidade definida para: " .. speed)
+                print("Velocidade: " .. speed)
                 createCommandNotification(";speed " .. speed)
             end
         else
@@ -453,7 +476,7 @@ local function processCommand(message)
         if jumpPower then
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.JumpPower = jumpPower
-                print("Poder de pulo definido para: " .. jumpPower)
+                print("Pulo: " .. jumpPower)
                 createCommandNotification(";jumppower " .. jumpPower)
             end
         else
@@ -463,26 +486,25 @@ local function processCommand(message)
     elseif cmd == "resetjp" then
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.JumpPower = defaultJumpPower
-            print("Poder de pulo resetado para: " .. defaultJumpPower)
+            print("Pulo resetado")
             createCommandNotification(";resetjp")
         end
     
     elseif cmd == "resetspeed" then
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.WalkSpeed = defaultWalkSpeed
-            print("Velocidade resetada para: " .. defaultWalkSpeed)
+            print("Velocidade resetada")
             createCommandNotification(";resetspeed")
         end
     
     elseif cmd == "tp" then
         local targetName = args[2]
         if targetName then
-            -- Verifica se é "random" para teleporte aleatório
+            -- Random
             if targetName:lower() == "random" then
                 local allPlayers = Players:GetPlayers()
                 local otherPlayers = {}
                 
-                -- Remove o próprio jogador da lista
                 for _, p in pairs(allPlayers) do
                     if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         table.insert(otherPlayers, p)
@@ -493,43 +515,108 @@ local function processCommand(message)
                     local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
                     if character and character:FindFirstChild("HumanoidRootPart") then
                         character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
-                        print("Teleportado aleatoriamente para: " .. randomPlayer.Name)
+                        print("TP random: " .. randomPlayer.Name)
                         createCommandNotification(";tp random -> " .. randomPlayer.Name)
                     end
                 else
-                    print("Nenhum jogador disponível para teleporte aleatório")
+                    print("Nenhum jogador disponível")
                 end
                 return
             end
             
-            -- Verifica se é "spawn" para teleporte ao spawn
+            -- Spawn
             if targetName:lower() == "spawn" then
                 if character and character:FindFirstChild("HumanoidRootPart") then
-                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0) -- Posição padrão do spawn
-                    print("Teleportado para o spawn")
+                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+                    print("TP spawn")
                     createCommandNotification(";tp spawn")
                 end
                 return
             end
             
-            -- Teleporte para jogador específico
+            -- Jogador específico
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                    print("Teleportado para: " .. targetPlayer.Name)
+                    print("TP: " .. targetPlayer.Name)
                     createCommandNotification(";tp " .. targetPlayer.Name)
                 end
             else
                 print("Jogador não encontrado: " .. targetName)
             end
         else
-            print("Uso: ;tp [nome do jogador], ;tp random ou ;tp spawn")
+            print("Uso: ;tp [nome/random/spawn]")
+        end
+    
+    elseif cmd == "view" then
+        local targetName = args[2]
+        if targetName then
+            local targetPlayer = findPlayer(targetName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                camera.CameraSubject = targetPlayer.Character.Humanoid
+                print("Visualizando: " .. targetPlayer.Name)
+                createCommandNotification(";view " .. targetPlayer.Name)
+            else
+                print("Jogador não encontrado: " .. targetName)
+            end
+        else
+            print("Uso: ;view [nome]")
+        end
+        
+    elseif cmd == "unview" then
+        if character and character:FindFirstChild("Humanoid") then
+            camera.CameraSubject = character.Humanoid
+            print("Visão restaurada")
+            createCommandNotification(";unview")
+        end
+        
+    elseif cmd == "glue" then
+        local targetName = args[2]
+        if targetName then
+            local targetPlayer = findPlayer(targetName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                -- Desgruda primeiro se já estiver grudado
+                if glueConnection then
+                    glueConnection:Disconnect()
+                    glueConnection = nil
+                end
+                
+                gluedToPlayer = targetPlayer
+                
+                -- Loop para manter grudado
+                glueConnection = RunService.Heartbeat:Connect(function()
+                    if character and character:FindFirstChild("HumanoidRootPart") and 
+                       gluedToPlayer and gluedToPlayer.Character and gluedToPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local targetCFrame = gluedToPlayer.Character.HumanoidRootPart.CFrame
+                        local backOffset = targetCFrame.LookVector * -2
+                        character.HumanoidRootPart.CFrame = CFrame.new(targetCFrame.Position + backOffset, targetCFrame.Position)
+                    end
+                end)
+                
+                print("Grudado: " .. targetPlayer.Name)
+                createCommandNotification(";glue " .. targetPlayer.Name)
+            else
+                print("Jogador não encontrado: " .. targetName)
+            end
+        else
+            print("Uso: ;glue [nome]")
+        end
+        
+    elseif cmd == "unglue" then
+        if glueConnection then
+            glueConnection:Disconnect()
+            glueConnection = nil
+            gluedToPlayer = nil
+            print("Desgrudado")
+            createCommandNotification(";unglue")
+        else
+            print("Você não está grudado")
         end
     
     elseif cmd == "cmds" then
         createCommandsGUI()
-        createCommandNotification(";cmds - GUI aberta")
+        createCommandNotification(";cmds")
         
     elseif cmd == "help" or cmd == "ajuda" then
         print("=== COMANDOS DISPONÍVEIS ===")
@@ -541,6 +628,10 @@ local function processCommand(message)
         print(";tp [nome] - Teleporta para jogador")
         print(";tp random - Teleporta para jogador aleatório")
         print(";tp spawn - Teleporta para o spawn")
+        print(";view [nome] - Visualiza outro jogador")
+        print(";unview - Volta para sua visão")
+        print(";glue [nome] - Gruda nas costas do jogador")
+        print(";unglue - Desgruda do jogador")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
@@ -555,29 +646,127 @@ local function processCommand(message)
     
     else
         print("Comando não reconhecido: " .. cmd)
-        print("Digite ;help para ver comandos no chat ou ;cmds para abrir a GUI")
+        print("Digite ;help ou ;cmds para ver comandos")
     end
 end
 
--- Função para capturar mensagens do chat
-local function onChatted(message)
-    processCommand(message)
+-- Captura de chat local (FUNCIONA SEMPRE)
+local function setupChatCapture()
+    local success, chatService = pcall(function()
+        return game:GetService("Chat")
+    end)
+    
+    -- Método 1: Captura através do StarterGui
+    local function captureMessage()
+        local chatFrame = playerGui:FindFirstChild("Chat")
+        if chatFrame then
+            local chatChannelParentFrame = chatFrame:FindFirstChild("Frame")
+            if chatChannelParentFrame then
+                local chatBarParentFrame = chatChannelParentFrame:FindFirstChild("ChatBarParentFrame")
+                if chatBarParentFrame then
+                    local frame = chatBarParentFrame:FindFirstChild("Frame")
+                    if frame then
+                        local boxFrame = frame:FindFirstChild("BoxFrame")
+                        if boxFrame then
+                            local frame2 = boxFrame:FindFirstChild("Frame")
+                            if frame2 then
+                                local chatBar = frame2:FindFirstChild("ChatBar")
+                                if chatBar then
+                                    local lastText = ""
+                                    chatBar:GetPropertyChangedSignal("Text"):Connect(function()
+                                        local text = chatBar.Text
+                                        if text ~= lastText and text:sub(1,1) == ";" then
+                                            lastText = text
+                                            processCommand(text)
+                                        end
+                                    end)
+                                    
+                                    chatBar.FocusLost:Connect(function(enterPressed)
+                                        if enterPressed and chatBar.Text:sub(1,1) == ";" then
+                                            processCommand(chatBar.Text)
+                                        end
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Método 2: UserInputService para capturar Enter
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.Return and not gameProcessed then
+            wait(0.1) -- Pequeno delay para garantir que o texto foi processado
+            local chatFrame = playerGui:FindFirstChild("Chat")
+            if chatFrame then
+                local chatChannelParentFrame = chatFrame:FindFirstChild("Frame")
+                if chatChannelParentFrame then
+                    local chatBarParentFrame = chatChannelParentFrame:FindFirstChild("ChatBarParentFrame")
+                    if chatBarParentFrame then
+                        local frame = chatBarParentFrame:FindFirstChild("Frame")
+                        if frame then
+                            local boxFrame = frame:FindFirstChild("BoxFrame")
+                            if boxFrame then
+                                local frame2 = boxFrame:FindFirstChild("Frame")
+                                if frame2 then
+                                    local chatBar = frame2:FindFirstChild("ChatBar")
+                                    if chatBar and chatBar.Text:sub(1,1) == ";" then
+                                        processCommand(chatBar.Text)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Método 3: Chatted event (backup)
+    player.Chatted:Connect(function(message)
+        if message:sub(1,1) == ";" then
+            processCommand(message)
+        end
+    end)
+    
+    -- Tentar capturar quando o chat carregar
+    coroutine.wrap(function()
+        while not playerGui:FindFirstChild("Chat") do
+            wait(0.5)
+        end
+        wait(2) -- Aguarda chat carregar completamente
+        captureMessage()
+    end)()
 end
-
--- Conecta o evento de chat
-player.Chatted:Connect(onChatted)
 
 -- Atualiza referências do personagem quando respawna
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
+    -- Restaura câmera
+    camera.CameraSubject = humanoid
+    originalCameraSubject = humanoid
+    
+    -- Desgruda automaticamente
+    if glueConnection then
+        glueConnection:Disconnect()
+        glueConnection = nil
+        gluedToPlayer = nil
+    end
 end)
 
-print("Script executor carregado!")
-print("Digite ;help para comandos no chat ou ;cmds para abrir a GUI")
-print("Total de scripts externos: " .. tostring(#externalScripts))
-print("Total de teleportes: " .. tostring(#teleportLocations))
+print("🚀 Script Executor Carregado!")
+print("📝 Digite ;help ou ;cmds para ver comandos")
+print("📊 Scripts externos: " .. tostring(#externalScripts))
+print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 
--- Abrir GUI automaticamente quando o script for executado
-wait(1) -- Aguarda um segundo para garantir que tudo carregou
-createCommandsGUI()
+-- Configurar captura de chat
+setupChatCapture()
+
+-- Abrir GUI automaticamente
+coroutine.wrap(function()
+    wait(1)
+    createCommandsGUI()
+end)()
