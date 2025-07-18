@@ -86,6 +86,10 @@ local externalScripts = {
     ["cmd2"] = {
         name = "Infinite Yield",
         url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+    },
+    ["hub2"] = {
+        name = "Coquette Hub",
+        url = "https://rawscripts.net/raw/Brookhaven-RP-Coquette-Hub-41921"
     }
 }
 
