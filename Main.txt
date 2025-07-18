@@ -82,6 +82,10 @@ local externalScripts = {
     ["invisible"] = {
         name = "Invisível",
         url = "https://rawscripts.net/raw/Brookhaven-RP-Avatar-invisible-45072"
+    },
+    ["cmd2"] = {
+        name = "Infinite Yield",
+        url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
     }
 }
 
@@ -311,6 +315,7 @@ local function createCommandsGUI()
     createCommandLabel(";resetspeed - Reseta velocidade", false)
     createCommandLabel(";tp [nome] - Teleporta para jogador", false)
     createCommandLabel(";tp random - Teleporta para jogador aleatório", false)
+    createCommandLabel(";tp spawn - Teleporta para o spawn", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -493,6 +498,16 @@ local function processCommand(message)
                 return
             end
             
+            -- Verifica se é "spawn" para teleporte ao spawn
+            if targetName:lower() == "spawn" then
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0) -- Posição padrão do spawn
+                    print("Teleportado para o spawn")
+                    createCommandNotification(";tp spawn")
+                end
+                return
+            end
+            
             -- Teleporte para jogador específico
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -505,7 +520,7 @@ local function processCommand(message)
                 print("Jogador não encontrado: " .. targetName)
             end
         else
-            print("Uso: ;tp [nome do jogador] ou ;tp random")
+            print("Uso: ;tp [nome do jogador], ;tp random ou ;tp spawn")
         end
     
     elseif cmd == "cmds" then
@@ -521,6 +536,7 @@ local function processCommand(message)
         print(";resetspeed - Reseta velocidade")
         print(";tp [nome] - Teleporta para jogador")
         print(";tp random - Teleporta para jogador aleatório")
+        print(";tp spawn - Teleporta para o spawn")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
