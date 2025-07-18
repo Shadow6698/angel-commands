@@ -132,64 +132,66 @@ local teleportLocations = {
 
 -- Função para criar notificação de comando
 local function createCommandNotification(commandText)
-    -- Remove notificação existente se houver
-    local existingNotif = playerGui:FindFirstChild("CommandNotification")
-    if existingNotif then
-        existingNotif:Destroy()
-    end
-    
-    -- Criar ScreenGui para notificação
-    local notifGui = Instance.new("ScreenGui")
-    notifGui.Name = "CommandNotification"
-    notifGui.Parent = playerGui
-    notifGui.ResetOnSpawn = false
-    
-    -- Frame da notificação
-    local notifFrame = Instance.new("Frame")
-    notifFrame.Size = UDim2.new(0, 300, 0, 50)
-    notifFrame.Position = UDim2.new(0.5, -150, 0, -60) -- Começa fora da tela
-    notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    notifFrame.BorderSizePixel = 0
-    notifFrame.Parent = notifGui
-    
-    -- Borda da notificação
-    local notifBorder = Instance.new("UIStroke")
-    notifBorder.Color = Color3.fromRGB(100, 200, 255)
-    notifBorder.Thickness = 2
-    notifBorder.Parent = notifFrame
-    
-    -- Cantos arredondados
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 8)
-    notifCorner.Parent = notifFrame
-    
-    -- Texto da notificação
-    local notifText = Instance.new("TextLabel")
-    notifText.Size = UDim2.new(1, -20, 1, 0)
-    notifText.Position = UDim2.new(0, 10, 0, 0)
-    notifText.BackgroundTransparency = 1
-    notifText.Text = "Comando executado: " .. commandText
-    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notifText.TextScaled = true
-    notifText.Font = Enum.Font.SourceSansBold
-    notifText.Parent = notifFrame
-    
-    -- Animação de entrada
-    local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, -150, 0, 20)
-    })
-    tweenIn:Play()
-    
-    -- Aguardar 2 segundos e fazer animação de saída
-    wait(2)
-    local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-        Position = UDim2.new(0.5, -150, 0, -60)
-    })
-    tweenOut:Play()
-    
-    -- Remover GUI após animação
-    tweenOut.Completed:Connect(function()
-        notifGui:Destroy()
+    spawn(function()
+        -- Remove notificação existente se houver
+        local existingNotif = playerGui:FindFirstChild("CommandNotification")
+        if existingNotif then
+            existingNotif:Destroy()
+        end
+        
+        -- Criar ScreenGui para notificação
+        local notifGui = Instance.new("ScreenGui")
+        notifGui.Name = "CommandNotification"
+        notifGui.Parent = playerGui
+        notifGui.ResetOnSpawn = false
+        
+        -- Frame da notificação
+        local notifFrame = Instance.new("Frame")
+        notifFrame.Size = UDim2.new(0, 300, 0, 50)
+        notifFrame.Position = UDim2.new(0.5, -150, 0, -60) -- Começa fora da tela
+        notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        notifFrame.BorderSizePixel = 0
+        notifFrame.Parent = notifGui
+        
+        -- Borda da notificação
+        local notifBorder = Instance.new("UIStroke")
+        notifBorder.Color = Color3.fromRGB(100, 200, 255)
+        notifBorder.Thickness = 2
+        notifBorder.Parent = notifFrame
+        
+        -- Cantos arredondados
+        local notifCorner = Instance.new("UICorner")
+        notifCorner.CornerRadius = UDim.new(0, 8)
+        notifCorner.Parent = notifFrame
+        
+        -- Texto da notificação
+        local notifText = Instance.new("TextLabel")
+        notifText.Size = UDim2.new(1, -20, 1, 0)
+        notifText.Position = UDim2.new(0, 10, 0, 0)
+        notifText.BackgroundTransparency = 1
+        notifText.Text = "Comando executado: " .. commandText
+        notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        notifText.TextScaled = true
+        notifText.Font = Enum.Font.SourceSansBold
+        notifText.Parent = notifFrame
+        
+        -- Animação de entrada
+        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, -150, 0, 20)
+        })
+        tweenIn:Play()
+        
+        -- Aguardar 2 segundos e fazer animação de saída
+        wait(2)
+        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -150, 0, -60)
+        })
+        tweenOut:Play()
+        
+        -- Remover GUI após animação
+        tweenOut.Completed:Connect(function()
+            notifGui:Destroy()
+        end)
     end)
 end
 
@@ -308,6 +310,7 @@ local function createCommandsGUI()
     createCommandLabel(";resetjp - Reseta poder de pulo", false)
     createCommandLabel(";resetspeed - Reseta velocidade", false)
     createCommandLabel(";tp [nome] - Teleporta para jogador", false)
+    createCommandLabel(";tp random - Teleporta para jogador aleatório", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -408,7 +411,7 @@ local function processCommand(message)
         local scriptInfo = externalScripts[cmd]
         print("Executando: " .. scriptInfo.name)
         executeExternalScript(scriptInfo.url, scriptInfo.name)
-        spawn(function() createCommandNotification(";" .. cmd .. " - " .. scriptInfo.name) end)
+        createCommandNotification(";" .. cmd .. " - " .. scriptInfo.name)
         return
     end
     
@@ -418,7 +421,7 @@ local function processCommand(message)
         if character and character:FindFirstChild("HumanoidRootPart") then
             character.HumanoidRootPart.CFrame = locationInfo.cframe
             print("Teleportado para: " .. locationInfo.name)
-            spawn(function() createCommandNotification(";" .. cmd .. " - " .. locationInfo.name) end)
+            createCommandNotification(";" .. cmd .. " - " .. locationInfo.name)
         end
         return
     end
@@ -430,7 +433,7 @@ local function processCommand(message)
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.WalkSpeed = speed
                 print("Velocidade definida para: " .. speed)
-                spawn(function() createCommandNotification(";speed " .. speed) end)
+                createCommandNotification(";speed " .. speed)
             end
         else
             print("Uso: ;speed [número]")
@@ -442,7 +445,7 @@ local function processCommand(message)
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.JumpPower = jumpPower
                 print("Poder de pulo definido para: " .. jumpPower)
-                spawn(function() createCommandNotification(";jumppower " .. jumpPower) end)
+                createCommandNotification(";jumppower " .. jumpPower)
             end
         else
             print("Uso: ;jumppower [número]")
@@ -452,36 +455,62 @@ local function processCommand(message)
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.JumpPower = defaultJumpPower
             print("Poder de pulo resetado para: " .. defaultJumpPower)
-            spawn(function() createCommandNotification(";resetjp") end)
+            createCommandNotification(";resetjp")
         end
     
     elseif cmd == "resetspeed" then
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.WalkSpeed = defaultWalkSpeed
             print("Velocidade resetada para: " .. defaultWalkSpeed)
-            spawn(function() createCommandNotification(";resetspeed") end)
+            createCommandNotification(";resetspeed")
         end
     
     elseif cmd == "tp" then
         local targetName = args[2]
         if targetName then
+            -- Verifica se é "random" para teleporte aleatório
+            if targetName:lower() == "random" then
+                local allPlayers = Players:GetPlayers()
+                local otherPlayers = {}
+                
+                -- Remove o próprio jogador da lista
+                for _, p in pairs(allPlayers) do
+                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        table.insert(otherPlayers, p)
+                    end
+                end
+                
+                if #otherPlayers > 0 then
+                    local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
+                        print("Teleportado aleatoriamente para: " .. randomPlayer.Name)
+                        createCommandNotification(";tp random -> " .. randomPlayer.Name)
+                    end
+                else
+                    print("Nenhum jogador disponível para teleporte aleatório")
+                end
+                return
+            end
+            
+            -- Teleporte para jogador específico
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
                     print("Teleportado para: " .. targetPlayer.Name)
-                    spawn(function() createCommandNotification(";tp " .. targetPlayer.Name) end)
+                    createCommandNotification(";tp " .. targetPlayer.Name)
                 end
             else
                 print("Jogador não encontrado: " .. targetName)
             end
         else
-            print("Uso: ;tp [nome do jogador]")
+            print("Uso: ;tp [nome do jogador] ou ;tp random")
         end
     
     elseif cmd == "cmds" then
         createCommandsGUI()
-        spawn(function() createCommandNotification(";cmds - GUI aberta") end)
+        createCommandNotification(";cmds - GUI aberta")
         
     elseif cmd == "help" or cmd == "ajuda" then
         print("=== COMANDOS DISPONÍVEIS ===")
@@ -491,6 +520,7 @@ local function processCommand(message)
         print(";resetjp - Reseta poder de pulo")
         print(";resetspeed - Reseta velocidade")
         print(";tp [nome] - Teleporta para jogador")
+        print(";tp random - Teleporta para jogador aleatório")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
