@@ -25,9 +25,6 @@ local defaultJumpPower = 50
 -- Variáveis para controle da câmera
 local originalCameraSubject = camera.CameraSubject
 
--- Variáveis para controle do glue
-local gluedWeld = nil
-
 -- Variáveis para controle do nosit
 local nositActive = false
 local nositConnections = {}
@@ -296,7 +293,7 @@ local function monitorCharacterForNoSit()
     table.insert(nositConnections, player.CharacterAdded:Connect(onCharacter))
 end
 
--- Função para criar GUI de comandos (mantida igual)
+-- Função para criar GUI de comandos
 local function createCommandsGUI()
     -- Remove GUI existente se houver
     local existingGui = playerGui:FindFirstChild("CommandsGUI")
@@ -415,8 +412,7 @@ local function createCommandsGUI()
     createCommandLabel(";tp spawn - Teleporta para o spawn", false)
     createCommandLabel(";view [nome] - Visualiza outro jogador", false)
     createCommandLabel(";unview - Volta para sua visão", false)
-    createCommandLabel(";glue [nome] - Gruda nas costas do jogador", false)
-    createCommandLabel(";unglue - Desgruda do jogador", false)
+    createCommandLabel(";glue - Abre GUI para grudar em players", false)
     createCommandLabel(";nosit - Impede sentar em qualquer lugar (by Carol)", false)
     createCommandLabel(";rj - Reentrar no servidor atual", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
@@ -529,87 +525,6 @@ local function processCommand(message)
                 createCommandNotification(";speed " .. speed)
             end
         else
-            print("Uso: ;speed [número]")
-        end
-    
-    elseif cmd == "jumppower" then
-        local argList = getArgs()
-        local jumpPower = tonumber(argList[1])
-        if jumpPower then
-            if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.JumpPower = jumpPower
-                print("⚡ Pulo: " .. jumpPower)
-                createCommandNotification(";jumppower " .. jumpPower)
-            end
-        else
-            print("Uso: ;jumppower [número]")
-        end
-    
-    elseif cmd == "resetjp" then
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = defaultJumpPower
-            print("⚡ Pulo resetado")
-            createCommandNotification(";resetjp")
-        end
-    
-    elseif cmd == "resetspeed" then
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = defaultWalkSpeed
-            print("⚡ Velocidade resetada")
-            createCommandNotification(";resetspeed")
-        end
-    
-    elseif cmd == "tp" then
-        local argList = getArgs()
-        local targetName = argList[1]
-        if targetName then
-            -- Random
-            if targetName:lower() == "random" then
-                local allPlayers = Players:GetPlayers()
-                local otherPlayers = {}
-                
-                for i = 1, #allPlayers do
-                    local p = allPlayers[i]
-                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                        table.insert(otherPlayers, p)
-                    end
-                end
-                
-                if #otherPlayers > 0 then
-                    local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
-                        print("⚡ TP random: " .. randomPlayer.Name)
-                        createCommandNotification(";tp random -> " .. randomPlayer.Name)
-                    end
-                else
-                    print("❌ Nenhum jogador disponível")
-                end
-                return
-            end
-            
-            -- Spawn
-            if targetName:lower() == "spawn" then
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-                    print("⚡ TP spawn")
-                    createCommandNotification(";tp spawn")
-                end
-                return
-            end
-            
-            -- Jogador específico
-            local targetPlayer = findPlayer(targetName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                    print("⚡ TP: " .. targetPlayer.Name)
-                    createCommandNotification(";tp " .. targetPlayer.Name)
-                end
-            else
-                print("❌ Jogador não encontrado: " .. targetName)
-            end
-        else
             print("Uso: ;tp [nome/random/spawn]")
         end
     
@@ -637,45 +552,16 @@ local function processCommand(message)
         end
         
     elseif cmd == "glue" then
-        local argList = getArgs()
-        local targetName = argList[1]
-        if targetName then
-            local targetPlayer = findPlayer(targetName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                character = player.Character or player.CharacterAdded:Wait()
-                local root = character:WaitForChild("HumanoidRootPart")
-                local targetRoot = targetPlayer.Character.HumanoidRootPart
-                
-                -- Desgrudar anterior, se houver
-                if gluedWeld then
-                    gluedWeld:Destroy()
-                end
-                
-                -- Posicionar e prender usando WeldConstraint
-                root.CFrame = targetRoot.CFrame
-                gluedWeld = Instance.new("WeldConstraint")
-                gluedWeld.Part0 = root
-                gluedWeld.Part1 = targetRoot
-                gluedWeld.Parent = root
-                
-                print("⚡ Grudado: " .. targetPlayer.Name)
-                createCommandNotification(";glue " .. targetPlayer.Name)
-            else
-                print("❌ Jogador não encontrado: " .. targetName)
-            end
-        else
-            print("Uso: ;glue [nome]")
-        end
+        print("⚡ Executando Glue GUI...")
+        local success, result = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/gluegui/main/Main.txt"))()
+            print("✅ Glue GUI carregada com sucesso!")
+        end)
         
-    elseif cmd == "unglue" then
-        if gluedWeld then
-            gluedWeld:Destroy()
-            gluedWeld = nil
-            print("⚡ Desgrudado")
-            createCommandNotification(";unglue")
-        else
-            print("❌ Você não está grudado")
+        if not success then
+            print("❌ Erro ao carregar Glue GUI: " .. tostring(result))
         end
+        createCommandNotification(";glue - GUI Carregada")
     
     elseif cmd == "nosit" then
         if nositActive then 
@@ -712,8 +598,7 @@ local function processCommand(message)
         print(";tp spawn - Teleporta para o spawn")
         print(";view [nome] - Visualiza outro jogador")
         print(";unview - Volta para sua visão")
-        print(";glue [nome] - Gruda nas costas do jogador")
-        print(";unglue - Desgruda do jogador")
+        print(";glue - Abre GUI para grudar em players")
         print(";nosit - Impede sentar em qualquer lugar (by Carol)")
         print(";rj - Reentrar no servidor atual")
         print(";cmds - Abre GUI com comandos")
@@ -796,12 +681,6 @@ player.CharacterAdded:Connect(function(newCharacter)
     -- Restaura câmera instantaneamente
     camera.CameraSubject = humanoid
     originalCameraSubject = humanoid
-    
-    -- Desgruda automaticamente
-    if gluedWeld then
-        gluedWeld:Destroy()
-        gluedWeld = nil
-    end
 end)
 
 -- INICIALIZAÇÃO DO SCRIPT
@@ -811,6 +690,7 @@ print("📝 Digite ;help ou ;cmds para ver comandos")
 print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
+print("🔗 GLUE agora abre uma GUI completa!")
 
 -- Configurar captura de chat otimizada
 setupInstantChatCapture()
@@ -826,3 +706,85 @@ print("✅ Script carregado com MÁXIMA OTIMIZAÇÃO!")
 print("🎮 GUI aberta automaticamente!")
 print("💬 Digite ;help para ver comandos no chat")
 print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
+print("🔄 Comando ;glue agora carrega GUI externa!") ;speed [número]")
+        end
+    
+    elseif cmd == "jumppower" then
+        local argList = getArgs()
+        local jumpPower = tonumber(argList[1])
+        if jumpPower then
+            if character and character:FindFirstChild("Humanoid") then
+                character.Humanoid.JumpPower = jumpPower
+                print("⚡ Pulo: " .. jumpPower)
+                createCommandNotification(";jumppower " .. jumpPower)
+            end
+        else
+            print("Uso: ;jumppower [número]")
+        end
+    
+    elseif cmd == "resetjp" then
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.JumpPower = defaultJumpPower
+            print("⚡ Pulo resetado")
+            createCommandNotification(";resetjp")
+        end
+    
+    elseif cmd == "resetspeed" then
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.WalkSpeed = defaultWalkSpeed
+            print("⚡ Velocidade resetada")
+            createCommandNotification(";resetspeed")
+        end
+    
+    elseif cmd == "tp" then
+        local argList = getArgs()
+        local targetName = argList[1]
+        if targetName then
+            -- Random
+            if targetName:lower() == "random" then
+                local allPlayers = Players:GetPlayers()
+                local otherPlayers = {}
+                
+                for i = 1, #allPlayers do
+                    local p = allPlayers[i]
+                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        table.insert(otherPlayers, p)
+                    end
+                end
+                
+                if #otherPlayers > 0 then
+                    local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
+                        print("⚡ TP random: " .. randomPlayer.Name)
+                        createCommandNotification(";tp random -> " .. randomPlayer.Name)
+                    end
+                else
+                    print("❌ Nenhum jogador disponível")
+                end
+                return
+            end
+            
+            -- Spawn
+            if targetName:lower() == "spawn" then
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+                    print("⚡ TP spawn")
+                    createCommandNotification(";tp spawn")
+                end
+                return
+            end
+            
+            -- Jogador específico
+            local targetPlayer = findPlayer(targetName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+                    print("⚡ TP: " .. targetPlayer.Name)
+                    createCommandNotification(";tp " .. targetPlayer.Name)
+                end
+            else
+                print("❌ Jogador não encontrado: " .. targetName)
+            end
+        else
+            print("Uso:
