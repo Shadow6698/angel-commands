@@ -1,4 +1,4 @@
--- Script Executor para Roblox com comandos de chat
+-- Script Executor para Roblox com comandos de chat - VERSÃO SEM DELAYS
 -- Prefix: ;
 -- Comandos básicos + Scripts externos + Teleportes + Funcionalidades especiais
 
@@ -24,9 +24,16 @@ local defaultJumpPower = 50
 -- Variáveis para controle da câmera
 local originalCameraSubject = camera.CameraSubject
 
--- Variáveis para controle do glue
-local glueConnection = nil
-local gluedToPlayer = nil
+-- Variáveis para controle do glue (NOVO SISTEMA)
+if getgenv().GlueCommandLoaded then return end
+getgenv().GlueCommandLoaded = true
+local gluedWeld = nil
+
+-- Variáveis para controle do nosit (NOVO SISTEMA)
+if getgenv().NoSitCommandLoaded then return end
+getgenv().NoSitCommandLoaded = true
+local nositActive = false
+local nositConnections = {}
 
 -- Lista de scripts externos
 local externalScripts = {
@@ -153,72 +160,70 @@ local teleportLocations = {
     ["parque"] = {name = "Parque", cframe = CFrame.new(180, 5, -173)}
 }
 
--- Função para criar notificação de comando (SEM DELAY)
+-- Função para criar notificação de comando (INSTANTÂNEA)
 local function createCommandNotification(commandText)
+    -- Remove notificação existente se houver
+    local existingNotif = playerGui:FindFirstChild("CommandNotification")
+    if existingNotif then
+        existingNotif:Destroy()
+    end
+    
+    -- Criar ScreenGui para notificação
+    local notifGui = Instance.new("ScreenGui")
+    notifGui.Name = "CommandNotification"
+    notifGui.Parent = playerGui
+    notifGui.ResetOnSpawn = false
+    
+    -- Frame da notificação
+    local notifFrame = Instance.new("Frame")
+    notifFrame.Size = UDim2.new(0, 300, 0, 50)
+    notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
+    notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    notifFrame.BorderSizePixel = 0
+    notifFrame.Parent = notifGui
+    
+    -- Borda da notificação
+    local notifBorder = Instance.new("UIStroke")
+    notifBorder.Color = Color3.fromRGB(100, 200, 255)
+    notifBorder.Thickness = 2
+    notifBorder.Parent = notifFrame
+    
+    -- Cantos arredondados
+    local notifCorner = Instance.new("UICorner")
+    notifCorner.CornerRadius = UDim.new(0, 8)
+    notifCorner.Parent = notifFrame
+    
+    -- Texto da notificação
+    local notifText = Instance.new("TextLabel")
+    notifText.Size = UDim2.new(1, -20, 1, 0)
+    notifText.Position = UDim2.new(0, 10, 0, 0)
+    notifText.BackgroundTransparency = 1
+    notifText.Text = "Comando: " .. commandText
+    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    notifText.TextScaled = true
+    notifText.Font = Enum.Font.SourceSansBold
+    notifText.Parent = notifFrame
+    
+    -- Animação de entrada INSTANTÂNEA
+    local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -150, 0, 20)
+    })
+    tweenIn:Play()
+    
+    -- Auto-remoção após 1 segundo (sem delay no script)
     coroutine.wrap(function()
-        -- Remove notificação existente se houver
-        local existingNotif = playerGui:FindFirstChild("CommandNotification")
-        if existingNotif then
-            existingNotif:Destroy()
-        end
-        
-        -- Criar ScreenGui para notificação
-        local notifGui = Instance.new("ScreenGui")
-        notifGui.Name = "CommandNotification"
-        notifGui.Parent = playerGui
-        notifGui.ResetOnSpawn = false
-        
-        -- Frame da notificação
-        local notifFrame = Instance.new("Frame")
-        notifFrame.Size = UDim2.new(0, 300, 0, 50)
-        notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
-        notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        notifFrame.BorderSizePixel = 0
-        notifFrame.Parent = notifGui
-        
-        -- Borda da notificação
-        local notifBorder = Instance.new("UIStroke")
-        notifBorder.Color = Color3.fromRGB(100, 200, 255)
-        notifBorder.Thickness = 2
-        notifBorder.Parent = notifFrame
-        
-        -- Cantos arredondados
-        local notifCorner = Instance.new("UICorner")
-        notifCorner.CornerRadius = UDim.new(0, 8)
-        notifCorner.Parent = notifFrame
-        
-        -- Texto da notificação
-        local notifText = Instance.new("TextLabel")
-        notifText.Size = UDim2.new(1, -20, 1, 0)
-        notifText.Position = UDim2.new(0, 10, 0, 0)
-        notifText.BackgroundTransparency = 1
-        notifText.Text = "Comando: " .. commandText
-        notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        notifText.TextScaled = true
-        notifText.Font = Enum.Font.SourceSansBold
-        notifText.Parent = notifFrame
-        
-        -- Animação de entrada
-        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0.5, -150, 0, 20)
-        })
-        tweenIn:Play()
-        
-        -- Aguardar 1.5 segundos e fazer animação de saída
-        wait(1.5)
-        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        wait(1)
+        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(0.5, -150, 0, -60)
         })
         tweenOut:Play()
-        
-        -- Remover GUI após animação
         tweenOut.Completed:Connect(function()
             notifGui:Destroy()
         end)
     end)()
 end
 
--- Função para executar script externo
+-- Função para executar script externo (INSTANTÂNEA)
 local function executeExternalScript(url, name)
     coroutine.wrap(function()
         local success, result = pcall(function()
@@ -249,7 +254,47 @@ local function findPlayer(name)
     return nil
 end
 
--- Função para criar GUI de comandos
+-- Funções do sistema NoSit
+local function protectHumanoid(humanoid)
+    if not humanoid then return end
+    -- Já impede o humanoid de sentar
+    humanoid.Sit = false
+    -- Monitora se tentarem mudar Sit para true
+    table.insert(nositConnections, humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
+        if nositActive and humanoid.Sit then
+            humanoid.Sit = false
+        end
+    end))
+end
+
+local function removeSeats()
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
+            obj:Destroy()
+        end
+    end
+end
+
+local function monitorNewSeats()
+    table.insert(nositConnections, Workspace.DescendantAdded:Connect(function(obj)
+        if nositActive and (obj:IsA("Seat") or obj:IsA("VehicleSeat")) then
+            obj:Destroy()
+        end
+    end))
+end
+
+local function monitorCharacterForNoSit()
+    local function onCharacter(char)
+        local humanoid = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid")
+        protectHumanoid(humanoid)
+    end
+    if player.Character then
+        onCharacter(player.Character)
+    end
+    table.insert(nositConnections, player.CharacterAdded:Connect(onCharacter))
+end
+
+-- Função para criar GUI de comandos (INSTANTÂNEA)
 local function createCommandsGUI()
     -- Remove GUI existente se houver
     local existingGui = playerGui:FindFirstChild("CommandsGUI")
@@ -370,6 +415,7 @@ local function createCommandsGUI()
     createCommandLabel(";unview - Volta para sua visão", false)
     createCommandLabel(";glue [nome] - Gruda nas costas do jogador", false)
     createCommandLabel(";unglue - Desgruda do jogador", false)
+    createCommandLabel(";nosit - Impede sentar em qualquer lugar", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -405,9 +451,9 @@ local function createCommandsGUI()
         screenGui:Destroy()
     end)
     
-    -- Animação de entrada
+    -- Animação de entrada INSTANTÂNEA
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
-    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 450, 0, 500)
     })
     tween:Play()
@@ -418,7 +464,7 @@ local function createCommandsGUI()
     end)
 end
 
--- Função para processar comandos (SEM DELAYS)
+-- Função para processar comandos (TOTALMENTE SEM DELAYS)
 local function processCommand(message)
     local prefix = ";"
     
@@ -576,23 +622,21 @@ local function processCommand(message)
         if targetName then
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                -- Desgruda primeiro se já estiver grudado
-                if glueConnection then
-                    glueConnection:Disconnect()
-                    glueConnection = nil
+                character = player.Character or player.CharacterAdded:Wait()
+                local root = character:WaitForChild("HumanoidRootPart")
+                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                
+                -- Desgrudar anterior, se houver
+                if gluedWeld then
+                    gluedWeld:Destroy()
                 end
                 
-                gluedToPlayer = targetPlayer
-                
-                -- Loop para manter grudado
-                glueConnection = RunService.Heartbeat:Connect(function()
-                    if character and character:FindFirstChild("HumanoidRootPart") and 
-                       gluedToPlayer and gluedToPlayer.Character and gluedToPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetCFrame = gluedToPlayer.Character.HumanoidRootPart.CFrame
-                        local backOffset = targetCFrame.LookVector * -2
-                        character.HumanoidRootPart.CFrame = CFrame.new(targetCFrame.Position + backOffset, targetCFrame.Position)
-                    end
-                end)
+                -- Posicionar e prender usando WeldConstraint
+                root.CFrame = targetRoot.CFrame
+                gluedWeld = Instance.new("WeldConstraint")
+                gluedWeld.Part0 = root
+                gluedWeld.Part1 = targetRoot
+                gluedWeld.Parent = root
                 
                 print("Grudado: " .. targetPlayer.Name)
                 createCommandNotification(";glue " .. targetPlayer.Name)
@@ -604,15 +648,26 @@ local function processCommand(message)
         end
         
     elseif cmd == "unglue" then
-        if glueConnection then
-            glueConnection:Disconnect()
-            glueConnection = nil
-            gluedToPlayer = nil
+        if gluedWeld then
+            gluedWeld:Destroy()
+            gluedWeld = nil
             print("Desgrudado")
             createCommandNotification(";unglue")
         else
             print("Você não está grudado")
         end
+    
+    elseif cmd == "nosit" then
+        if nositActive then 
+            print("NoSit já está ativo")
+            return 
+        end
+        nositActive = true
+        removeSeats()
+        monitorNewSeats()
+        monitorCharacterForNoSit()
+        print("NoSit ativado - Proteção contra sentar")
+        createCommandNotification(";nosit ativado")
     
     elseif cmd == "cmds" then
         createCommandsGUI()
@@ -632,6 +687,7 @@ local function processCommand(message)
         print(";unview - Volta para sua visão")
         print(";glue [nome] - Gruda nas costas do jogador")
         print(";unglue - Desgruda do jogador")
+        print(";nosit - Impede sentar em qualquer lugar")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
@@ -650,13 +706,13 @@ local function processCommand(message)
     end
 end
 
--- Captura de chat local (FUNCIONA SEMPRE)
+-- Captura de chat local (FUNCIONA SEMPRE - SEM DELAYS)
 local function setupChatCapture()
     local success, chatService = pcall(function()
         return game:GetService("Chat")
     end)
     
-    -- Método 1: Captura através do StarterGui
+    -- Método 1: Captura através do StarterGui (INSTANTÂNEA)
     local function captureMessage()
         local chatFrame = playerGui:FindFirstChild("Chat")
         if chatFrame then
@@ -695,10 +751,10 @@ local function setupChatCapture()
         end
     end
     
-    -- Método 2: UserInputService para capturar Enter
+    -- Método 2: UserInputService para capturar Enter (SEM DELAY)
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if input.KeyCode == Enum.KeyCode.Return and not gameProcessed then
-            wait(0.1) -- Pequeno delay para garantir que o texto foi processado
+            -- Processamento imediato
             local chatFrame = playerGui:FindFirstChild("Chat")
             if chatFrame then
                 local chatChannelParentFrame = chatFrame:FindFirstChild("Frame")
@@ -724,24 +780,23 @@ local function setupChatCapture()
         end
     end)
     
-    -- Método 3: Chatted event (backup)
+    -- Método 3: Chatted event (backup - INSTANTÂNEO)
     player.Chatted:Connect(function(message)
         if message:sub(1,1) == ";" then
             processCommand(message)
         end
     end)
     
-    -- Tentar capturar quando o chat carregar
+    -- Tentar capturar quando o chat carregar (SEM DELAYS DESNECESSÁRIOS)
     coroutine.wrap(function()
         while not playerGui:FindFirstChild("Chat") do
-            wait(0.5)
+            RunService.Heartbeat:Wait() -- Mais eficiente que wait()
         end
-        wait(2) -- Aguarda chat carregar completamente
         captureMessage()
     end)()
 end
 
--- Atualiza referências do personagem quando respawna
+-- Atualiza referências do personagem quando respawna (INSTANTÂNEO)
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
@@ -749,24 +804,21 @@ player.CharacterAdded:Connect(function(newCharacter)
     camera.CameraSubject = humanoid
     originalCameraSubject = humanoid
     
-    -- Desgruda automaticamente
-    if glueConnection then
-        glueConnection:Disconnect()
-        glueConnection = nil
-        gluedToPlayer = nil
+    -- Desgruda automaticamente (NOVO SISTEMA)
+    if gluedWeld then
+        gluedWeld:Destroy()
+        gluedWeld = nil
     end
 end)
 
-print("🚀 Script Executor Carregado!")
+print("🚀 Script Executor Carregado! [VERSÃO SEM DELAYS]")
 print("📝 Digite ;help ou ;cmds para ver comandos")
 print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
+print("⚡ Todos os comandos são INSTANTÂNEOS!")
 
--- Configurar captura de chat
+-- Configurar captura de chat (INSTANTÂNEO)
 setupChatCapture()
 
--- Abrir GUI automaticamente
-coroutine.wrap(function()
-    wait(1)
-    createCommandsGUI()
-end)()
+-- Abrir GUI automaticamente (SEM DELAY)
+createCommandsGUI()
