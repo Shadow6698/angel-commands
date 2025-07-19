@@ -1,4 +1,4 @@
--- Script Executor para Roblox com comandos de chat - VERSÃO SEM DELAYS
+-- Script Executor para Roblox com comandos de chat - VERSÃO CORRIGIDA
 -- Prefix: ;
 -- Comandos básicos + Scripts externos + Teleportes + Funcionalidades especiais
 
@@ -24,14 +24,10 @@ local defaultJumpPower = 50
 -- Variáveis para controle da câmera
 local originalCameraSubject = camera.CameraSubject
 
--- Variáveis para controle do glue (NOVO SISTEMA)
-if getgenv().GlueCommandLoaded then return end
-getgenv().GlueCommandLoaded = true
+-- Variáveis para controle do glue
 local gluedWeld = nil
 
--- Variáveis para controle do nosit (NOVO SISTEMA)
-if getgenv().NoSitCommandLoaded then return end
-getgenv().NoSitCommandLoaded = true
+-- Variáveis para controle do nosit
 local nositActive = false
 local nositConnections = {}
 
@@ -160,58 +156,58 @@ local teleportLocations = {
     ["parque"] = {name = "Parque", cframe = CFrame.new(180, 5, -173)}
 }
 
--- Função para criar notificação de comando (INSTANTÂNEA)
+-- Função para criar notificação de comando
 local function createCommandNotification(commandText)
-    -- Remove notificação existente se houver
-    local existingNotif = playerGui:FindFirstChild("CommandNotification")
-    if existingNotif then
-        existingNotif:Destroy()
-    end
-    
-    -- Criar ScreenGui para notificação
-    local notifGui = Instance.new("ScreenGui")
-    notifGui.Name = "CommandNotification"
-    notifGui.Parent = playerGui
-    notifGui.ResetOnSpawn = false
-    
-    -- Frame da notificação
-    local notifFrame = Instance.new("Frame")
-    notifFrame.Size = UDim2.new(0, 300, 0, 50)
-    notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
-    notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    notifFrame.BorderSizePixel = 0
-    notifFrame.Parent = notifGui
-    
-    -- Borda da notificação
-    local notifBorder = Instance.new("UIStroke")
-    notifBorder.Color = Color3.fromRGB(100, 200, 255)
-    notifBorder.Thickness = 2
-    notifBorder.Parent = notifFrame
-    
-    -- Cantos arredondados
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 8)
-    notifCorner.Parent = notifFrame
-    
-    -- Texto da notificação
-    local notifText = Instance.new("TextLabel")
-    notifText.Size = UDim2.new(1, -20, 1, 0)
-    notifText.Position = UDim2.new(0, 10, 0, 0)
-    notifText.BackgroundTransparency = 1
-    notifText.Text = "Comando: " .. commandText
-    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notifText.TextScaled = true
-    notifText.Font = Enum.Font.SourceSansBold
-    notifText.Parent = notifFrame
-    
-    -- Animação de entrada INSTANTÂNEA
-    local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, -150, 0, 20)
-    })
-    tweenIn:Play()
-    
-    -- Auto-remoção após 1 segundo (sem delay no script)
     coroutine.wrap(function()
+        -- Remove notificação existente se houver
+        local existingNotif = playerGui:FindFirstChild("CommandNotification")
+        if existingNotif then
+            existingNotif:Destroy()
+        end
+        
+        -- Criar ScreenGui para notificação
+        local notifGui = Instance.new("ScreenGui")
+        notifGui.Name = "CommandNotification"
+        notifGui.Parent = playerGui
+        notifGui.ResetOnSpawn = false
+        
+        -- Frame da notificação
+        local notifFrame = Instance.new("Frame")
+        notifFrame.Size = UDim2.new(0, 300, 0, 50)
+        notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
+        notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        notifFrame.BorderSizePixel = 0
+        notifFrame.Parent = notifGui
+        
+        -- Borda da notificação
+        local notifBorder = Instance.new("UIStroke")
+        notifBorder.Color = Color3.fromRGB(100, 200, 255)
+        notifBorder.Thickness = 2
+        notifBorder.Parent = notifFrame
+        
+        -- Cantos arredondados
+        local notifCorner = Instance.new("UICorner")
+        notifCorner.CornerRadius = UDim.new(0, 8)
+        notifCorner.Parent = notifFrame
+        
+        -- Texto da notificação
+        local notifText = Instance.new("TextLabel")
+        notifText.Size = UDim2.new(1, -20, 1, 0)
+        notifText.Position = UDim2.new(0, 10, 0, 0)
+        notifText.BackgroundTransparency = 1
+        notifText.Text = "Comando: " .. commandText
+        notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        notifText.TextScaled = true
+        notifText.Font = Enum.Font.SourceSansBold
+        notifText.Parent = notifFrame
+        
+        -- Animação de entrada
+        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, -150, 0, 20)
+        })
+        tweenIn:Play()
+        
+        -- Auto-remoção após 1 segundo
         wait(1)
         local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(0.5, -150, 0, -60)
@@ -223,7 +219,7 @@ local function createCommandNotification(commandText)
     end)()
 end
 
--- Função para executar script externo (INSTANTÂNEA)
+-- Função para executar script externo
 local function executeExternalScript(url, name)
     coroutine.wrap(function()
         local success, result = pcall(function()
@@ -257,9 +253,7 @@ end
 -- Funções do sistema NoSit
 local function protectHumanoid(humanoid)
     if not humanoid then return end
-    -- Já impede o humanoid de sentar
     humanoid.Sit = false
-    -- Monitora se tentarem mudar Sit para true
     table.insert(nositConnections, humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
         if nositActive and humanoid.Sit then
             humanoid.Sit = false
@@ -294,7 +288,7 @@ local function monitorCharacterForNoSit()
     table.insert(nositConnections, player.CharacterAdded:Connect(onCharacter))
 end
 
--- Função para criar GUI de comandos (INSTANTÂNEA)
+-- Função para criar GUI de comandos
 local function createCommandsGUI()
     -- Remove GUI existente se houver
     local existingGui = playerGui:FindFirstChild("CommandsGUI")
@@ -415,7 +409,7 @@ local function createCommandsGUI()
     createCommandLabel(";unview - Volta para sua visão", false)
     createCommandLabel(";glue [nome] - Gruda nas costas do jogador", false)
     createCommandLabel(";unglue - Desgruda do jogador", false)
-    createCommandLabel(";nosit - Impede sentar em qualquer lugar", false)
+    createCommandLabel(";nosit - Impede sentar em qualquer lugar (by Carol)", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -451,7 +445,7 @@ local function createCommandsGUI()
         screenGui:Destroy()
     end)
     
-    -- Animação de entrada INSTANTÂNEA
+    -- Animação de entrada
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
     local tween = TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 450, 0, 500)
@@ -464,12 +458,12 @@ local function createCommandsGUI()
     end)
 end
 
--- Função para processar comandos (TOTALMENTE SEM DELAYS)
+-- Função para processar comandos
 local function processCommand(message)
     local prefix = ";"
     
     -- Verifica se a mensagem começa com o prefixo
-    if not message:sub(1, 1) == prefix then
+    if message:sub(1, 1) ~= prefix then
         return
     end
     
@@ -482,12 +476,16 @@ local function processCommand(message)
         table.insert(args, word)
     end
     
+    if #args == 0 then
+        return
+    end
+    
     local cmd = args[1]:lower()
     
     -- Verifica se é um script externo
     if externalScripts[cmd] then
         local scriptInfo = externalScripts[cmd]
-        print("Executando: " .. scriptInfo.name)
+        print("Executando script externo: " .. scriptInfo.name)
         executeExternalScript(scriptInfo.url, scriptInfo.name)
         createCommandNotification(";" .. cmd .. " - " .. scriptInfo.name)
         return
@@ -500,6 +498,8 @@ local function processCommand(message)
             character.HumanoidRootPart.CFrame = locationInfo.cframe
             print("Teleportado para: " .. locationInfo.name)
             createCommandNotification(";" .. cmd .. " - " .. locationInfo.name)
+        else
+            print("Personagem não encontrado para teleporte")
         end
         return
     end
@@ -666,8 +666,8 @@ local function processCommand(message)
         removeSeats()
         monitorNewSeats()
         monitorCharacterForNoSit()
-        print("NoSit ativado - Proteção contra sentar")
-        createCommandNotification(";nosit ativado")
+        print("NoSit ativado - Proteção contra sentar (by Carol)")
+        createCommandNotification(";nosit ativado (by Carol)")
     
     elseif cmd == "cmds" then
         createCommandsGUI()
@@ -687,7 +687,7 @@ local function processCommand(message)
         print(";unview - Volta para sua visão")
         print(";glue [nome] - Gruda nas costas do jogador")
         print(";unglue - Desgruda do jogador")
-        print(";nosit - Impede sentar em qualquer lugar")
+        print(";nosit - Impede sentar em qualquer lugar (by Carol)")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
@@ -706,97 +706,17 @@ local function processCommand(message)
     end
 end
 
--- Captura de chat local (FUNCIONA SEMPRE - SEM DELAYS)
+-- Captura de chat local
 local function setupChatCapture()
-    local success, chatService = pcall(function()
-        return game:GetService("Chat")
-    end)
-    
-    -- Método 1: Captura através do StarterGui (INSTANTÂNEA)
-    local function captureMessage()
-        local chatFrame = playerGui:FindFirstChild("Chat")
-        if chatFrame then
-            local chatChannelParentFrame = chatFrame:FindFirstChild("Frame")
-            if chatChannelParentFrame then
-                local chatBarParentFrame = chatChannelParentFrame:FindFirstChild("ChatBarParentFrame")
-                if chatBarParentFrame then
-                    local frame = chatBarParentFrame:FindFirstChild("Frame")
-                    if frame then
-                        local boxFrame = frame:FindFirstChild("BoxFrame")
-                        if boxFrame then
-                            local frame2 = boxFrame:FindFirstChild("Frame")
-                            if frame2 then
-                                local chatBar = frame2:FindFirstChild("ChatBar")
-                                if chatBar then
-                                    local lastText = ""
-                                    chatBar:GetPropertyChangedSignal("Text"):Connect(function()
-                                        local text = chatBar.Text
-                                        if text ~= lastText and text:sub(1,1) == ";" then
-                                            lastText = text
-                                            processCommand(text)
-                                        end
-                                    end)
-                                    
-                                    chatBar.FocusLost:Connect(function(enterPressed)
-                                        if enterPressed and chatBar.Text:sub(1,1) == ";" then
-                                            processCommand(chatBar.Text)
-                                        end
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Método 2: UserInputService para capturar Enter (SEM DELAY)
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if input.KeyCode == Enum.KeyCode.Return and not gameProcessed then
-            -- Processamento imediato
-            local chatFrame = playerGui:FindFirstChild("Chat")
-            if chatFrame then
-                local chatChannelParentFrame = chatFrame:FindFirstChild("Frame")
-                if chatChannelParentFrame then
-                    local chatBarParentFrame = chatChannelParentFrame:FindFirstChild("ChatBarParentFrame")
-                    if chatBarParentFrame then
-                        local frame = chatBarParentFrame:FindFirstChild("Frame")
-                        if frame then
-                            local boxFrame = frame:FindFirstChild("BoxFrame")
-                            if boxFrame then
-                                local frame2 = boxFrame:FindFirstChild("Frame")
-                                if frame2 then
-                                    local chatBar = frame2:FindFirstChild("ChatBar")
-                                    if chatBar and chatBar.Text:sub(1,1) == ";" then
-                                        processCommand(chatBar.Text)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end)
-    
-    -- Método 3: Chatted event (backup - INSTANTÂNEO)
+    -- Método principal: Chatted event
     player.Chatted:Connect(function(message)
         if message:sub(1,1) == ";" then
             processCommand(message)
         end
     end)
-    
-    -- Tentar capturar quando o chat carregar (SEM DELAYS DESNECESSÁRIOS)
-    coroutine.wrap(function()
-        while not playerGui:FindFirstChild("Chat") do
-            RunService.Heartbeat:Wait() -- Mais eficiente que wait()
-        end
-        captureMessage()
-    end)()
 end
 
--- Atualiza referências do personagem quando respawna (INSTANTÂNEO)
+-- Atualiza referências do personagem quando respawna
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
@@ -804,21 +724,26 @@ player.CharacterAdded:Connect(function(newCharacter)
     camera.CameraSubject = humanoid
     originalCameraSubject = humanoid
     
-    -- Desgruda automaticamente (NOVO SISTEMA)
+    -- Desgruda automaticamente
     if gluedWeld then
         gluedWeld:Destroy()
         gluedWeld = nil
     end
 end)
 
-print("🚀 Script Executor Carregado! [VERSÃO SEM DELAYS]")
+print("🚀 Script Executor Carregado! [VERSÃO CORRIGIDA]")
 print("📝 Digite ;help ou ;cmds para ver comandos")
 print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 print("⚡ Todos os comandos são INSTANTÂNEOS!")
 
--- Configurar captura de chat (INSTANTÂNEO)
+-- Configurar captura de chat
 setupChatCapture()
 
--- Abrir GUI automaticamente (SEM DELAY)
+-- Abrir GUI automaticamente ao executar o script
 createCommandsGUI()
+
+-- Teste inicial
+print("✅ Script carregado com sucesso!")
+print("🎮 GUI aberta automaticamente!")
+print("💬 Digite ;help para ver comandos no chat")
