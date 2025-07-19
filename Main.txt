@@ -410,6 +410,7 @@ local function createCommandsGUI()
     createCommandLabel(";glue [nome] - Gruda nas costas do jogador", false)
     createCommandLabel(";unglue - Desgruda do jogador", false)
     createCommandLabel(";nosit - Impede sentar em qualquer lugar (by Carol)", false)
+    createCommandLabel(";rj - Reentrar no servidor atual", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
     createCommandLabel(";cmds - Abre esta GUI", false)
     
@@ -669,6 +670,13 @@ local function processCommand(message)
         print("NoSit ativado - Proteção contra sentar (by Carol)")
         createCommandNotification(";nosit ativado (by Carol)")
     
+    elseif cmd == "rj" then
+        print("Reentrando no servidor...")
+        createCommandNotification(";rj - Reentrando...")
+        -- Rejoin no mesmo servidor
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:Teleport(game.PlaceId, player)
+    
     elseif cmd == "cmds" then
         createCommandsGUI()
         createCommandNotification(";cmds")
@@ -688,6 +696,7 @@ local function processCommand(message)
         print(";glue [nome] - Gruda nas costas do jogador")
         print(";unglue - Desgruda do jogador")
         print(";nosit - Impede sentar em qualquer lugar (by Carol)")
+        print(";rj - Reentrar no servidor atual")
         print(";cmds - Abre GUI com comandos")
         print("")
         print("Scripts externos:")
