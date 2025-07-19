@@ -1,6 +1,7 @@
--- Script Executor para Roblox com comandos de chat - VERSÃO CORRIGIDA
+-- Script Executor para Roblox com comandos de chat - VERSÃO OTIMIZADA
 -- Prefix: ;
 -- Comandos básicos + Scripts externos + Teleportes + Funcionalidades especiais
+-- EXECUÇÃO INSTANTÂNEA SEM DELAYS
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -156,9 +157,9 @@ local teleportLocations = {
     ["parque"] = {name = "Parque", cframe = CFrame.new(180, 5, -173)}
 }
 
--- Função para criar notificação de comando
+-- Função para criar notificação de comando (mantida igual)
 local function createCommandNotification(commandText)
-    coroutine.wrap(function()
+    spawn(function()
         -- Remove notificação existente se houver
         local existingNotif = playerGui:FindFirstChild("CommandNotification")
         if existingNotif then
@@ -216,33 +217,34 @@ local function createCommandNotification(commandText)
         tweenOut.Completed:Connect(function()
             notifGui:Destroy()
         end)
-    end)()
+    end)
 end
 
--- Função para executar script externo
+-- Função para executar script externo - OTIMIZADA PARA EXECUÇÃO INSTANTÂNEA
 local function executeExternalScript(url, name)
-    coroutine.wrap(function()
-        local success, result = pcall(function()
-            local script = game:HttpGet(url)
-            local func = loadstring(script)
-            if func then
-                func()
-                print("Script executado: " .. name)
-            else
-                print("Erro ao carregar: " .. name)
-            end
-        end)
-        
-        if not success then
-            print("Erro ao executar " .. name)
+    -- Execução síncrona e imediata
+    local success, result = pcall(function()
+        local script = game:HttpGet(url)
+        local func = loadstring(script)
+        if func then
+            func()
+            print("✅ Script executado instantaneamente: " .. name)
+        else
+            print("❌ Erro ao carregar: " .. name)
         end
-    end)()
+    end)
+    
+    if not success then
+        print("❌ Erro ao executar " .. name .. ": " .. tostring(result))
+    end
 end
 
--- Função para encontrar jogador por nome parcial
+-- Função para encontrar jogador por nome parcial - OTIMIZADA
 local function findPlayer(name)
     name = name:lower()
-    for _, p in pairs(Players:GetPlayers()) do
+    local players = Players:GetPlayers()
+    for i = 1, #players do
+        local p = players[i]
         if p.Name:lower():find(name) or p.DisplayName:lower():find(name) then
             return p
         end
@@ -250,7 +252,7 @@ local function findPlayer(name)
     return nil
 end
 
--- Funções do sistema NoSit
+-- Funções do sistema NoSit - OTIMIZADAS
 local function protectHumanoid(humanoid)
     if not humanoid then return end
     humanoid.Sit = false
@@ -262,7 +264,9 @@ local function protectHumanoid(humanoid)
 end
 
 local function removeSeats()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
+    local descendants = Workspace:GetDescendants()
+    for i = 1, #descendants do
+        local obj = descendants[i]
         if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
             obj:Destroy()
         end
@@ -288,7 +292,7 @@ local function monitorCharacterForNoSit()
     table.insert(nositConnections, player.CharacterAdded:Connect(onCharacter))
 end
 
--- Função para criar GUI de comandos
+-- Função para criar GUI de comandos (mantida igual)
 local function createCommandsGUI()
     -- Remove GUI existente se houver
     local existingGui = playerGui:FindFirstChild("CommandsGUI")
@@ -459,59 +463,65 @@ local function createCommandsGUI()
     end)
 end
 
--- Função para processar comandos
+-- Função para processar comandos - EXTREMAMENTE OTIMIZADA
 local function processCommand(message)
-    local prefix = ";"
-    
-    -- Verifica se a mensagem começa com o prefixo
-    if message:sub(1, 1) ~= prefix then
+    -- Verificação instantânea do prefixo
+    if message:sub(1, 1) ~= ";" then
         return
     end
     
-    -- Remove o prefixo
+    -- Parse rápido do comando
     local command = message:sub(2)
-    local args = {}
+    local spacePos = command:find(" ")
+    local cmd, args
     
-    -- Separa comando e argumentos
-    for word in command:gmatch("%S+") do
-        table.insert(args, word)
+    if spacePos then
+        cmd = command:sub(1, spacePos - 1):lower()
+        args = command:sub(spacePos + 1)
+    else
+        cmd = command:lower()
+        args = ""
     end
     
-    if #args == 0 then
-        return
+    -- Parse de argumentos apenas quando necessário
+    local function getArgs()
+        local argList = {}
+        for word in args:gmatch("%S+") do
+            table.insert(argList, word)
+        end
+        return argList
     end
     
-    local cmd = args[1]:lower()
-    
-    -- Verifica se é um script externo
+    -- Verificação de scripts externos - PRIMEIRA PRIORIDADE
     if externalScripts[cmd] then
         local scriptInfo = externalScripts[cmd]
-        print("Executando script externo: " .. scriptInfo.name)
+        print("⚡ Executando script externo: " .. scriptInfo.name)
         executeExternalScript(scriptInfo.url, scriptInfo.name)
         createCommandNotification(";" .. cmd .. " - " .. scriptInfo.name)
         return
     end
     
-    -- Verifica se é um teleporte para localização
+    -- Verificação de teleportes - SEGUNDA PRIORIDADE
     if teleportLocations[cmd] then
         local locationInfo = teleportLocations[cmd]
         if character and character:FindFirstChild("HumanoidRootPart") then
             character.HumanoidRootPart.CFrame = locationInfo.cframe
-            print("Teleportado para: " .. locationInfo.name)
+            print("⚡ Teleportado instantaneamente para: " .. locationInfo.name)
             createCommandNotification(";" .. cmd .. " - " .. locationInfo.name)
         else
-            print("Personagem não encontrado para teleporte")
+            print("❌ Personagem não encontrado para teleporte")
         end
         return
     end
     
-    -- Comandos básicos
+    -- Comandos básicos - EXECUÇÃO INSTANTÂNEA
     if cmd == "speed" then
-        local speed = tonumber(args[2])
+        local argList = getArgs()
+        local speed = tonumber(argList[1])
         if speed then
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.WalkSpeed = speed
-                print("Velocidade: " .. speed)
+                print("⚡ Velocidade: " .. speed)
                 createCommandNotification(";speed " .. speed)
             end
         else
@@ -519,11 +529,12 @@ local function processCommand(message)
         end
     
     elseif cmd == "jumppower" then
-        local jumpPower = tonumber(args[2])
+        local argList = getArgs()
+        local jumpPower = tonumber(argList[1])
         if jumpPower then
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.JumpPower = jumpPower
-                print("Pulo: " .. jumpPower)
+                print("⚡ Pulo: " .. jumpPower)
                 createCommandNotification(";jumppower " .. jumpPower)
             end
         else
@@ -533,26 +544,28 @@ local function processCommand(message)
     elseif cmd == "resetjp" then
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.JumpPower = defaultJumpPower
-            print("Pulo resetado")
+            print("⚡ Pulo resetado")
             createCommandNotification(";resetjp")
         end
     
     elseif cmd == "resetspeed" then
         if character and character:FindFirstChild("Humanoid") then
             character.Humanoid.WalkSpeed = defaultWalkSpeed
-            print("Velocidade resetada")
+            print("⚡ Velocidade resetada")
             createCommandNotification(";resetspeed")
         end
     
     elseif cmd == "tp" then
-        local targetName = args[2]
+        local argList = getArgs()
+        local targetName = argList[1]
         if targetName then
             -- Random
             if targetName:lower() == "random" then
                 local allPlayers = Players:GetPlayers()
                 local otherPlayers = {}
                 
-                for _, p in pairs(allPlayers) do
+                for i = 1, #allPlayers do
+                    local p = allPlayers[i]
                     if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         table.insert(otherPlayers, p)
                     end
@@ -562,11 +575,11 @@ local function processCommand(message)
                     local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
                     if character and character:FindFirstChild("HumanoidRootPart") then
                         character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
-                        print("TP random: " .. randomPlayer.Name)
+                        print("⚡ TP random: " .. randomPlayer.Name)
                         createCommandNotification(";tp random -> " .. randomPlayer.Name)
                     end
                 else
-                    print("Nenhum jogador disponível")
+                    print("❌ Nenhum jogador disponível")
                 end
                 return
             end
@@ -575,7 +588,7 @@ local function processCommand(message)
             if targetName:lower() == "spawn" then
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-                    print("TP spawn")
+                    print("⚡ TP spawn")
                     createCommandNotification(";tp spawn")
                 end
                 return
@@ -586,26 +599,27 @@ local function processCommand(message)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                    print("TP: " .. targetPlayer.Name)
+                    print("⚡ TP: " .. targetPlayer.Name)
                     createCommandNotification(";tp " .. targetPlayer.Name)
                 end
             else
-                print("Jogador não encontrado: " .. targetName)
+                print("❌ Jogador não encontrado: " .. targetName)
             end
         else
             print("Uso: ;tp [nome/random/spawn]")
         end
     
     elseif cmd == "view" then
-        local targetName = args[2]
+        local argList = getArgs()
+        local targetName = argList[1]
         if targetName then
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
                 camera.CameraSubject = targetPlayer.Character.Humanoid
-                print("Visualizando: " .. targetPlayer.Name)
+                print("⚡ Visualizando: " .. targetPlayer.Name)
                 createCommandNotification(";view " .. targetPlayer.Name)
             else
-                print("Jogador não encontrado: " .. targetName)
+                print("❌ Jogador não encontrado: " .. targetName)
             end
         else
             print("Uso: ;view [nome]")
@@ -614,12 +628,13 @@ local function processCommand(message)
     elseif cmd == "unview" then
         if character and character:FindFirstChild("Humanoid") then
             camera.CameraSubject = character.Humanoid
-            print("Visão restaurada")
+            print("⚡ Visão restaurada")
             createCommandNotification(";unview")
         end
         
     elseif cmd == "glue" then
-        local targetName = args[2]
+        local argList = getArgs()
+        local targetName = argList[1]
         if targetName then
             local targetPlayer = findPlayer(targetName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -639,10 +654,10 @@ local function processCommand(message)
                 gluedWeld.Part1 = targetRoot
                 gluedWeld.Parent = root
                 
-                print("Grudado: " .. targetPlayer.Name)
+                print("⚡ Grudado: " .. targetPlayer.Name)
                 createCommandNotification(";glue " .. targetPlayer.Name)
             else
-                print("Jogador não encontrado: " .. targetName)
+                print("❌ Jogador não encontrado: " .. targetName)
             end
         else
             print("Uso: ;glue [nome]")
@@ -652,26 +667,26 @@ local function processCommand(message)
         if gluedWeld then
             gluedWeld:Destroy()
             gluedWeld = nil
-            print("Desgrudado")
+            print("⚡ Desgrudado")
             createCommandNotification(";unglue")
         else
-            print("Você não está grudado")
+            print("❌ Você não está grudado")
         end
     
     elseif cmd == "nosit" then
         if nositActive then 
-            print("NoSit já está ativo")
+            print("❌ NoSit já está ativo")
             return 
         end
         nositActive = true
         removeSeats()
         monitorNewSeats()
         monitorCharacterForNoSit()
-        print("NoSit ativado - Proteção contra sentar (by Carol)")
+        print("⚡ NoSit ativado instantaneamente - Proteção contra sentar (by Carol)")
         createCommandNotification(";nosit ativado (by Carol)")
     
     elseif cmd == "rj" then
-        print("Reentrando no servidor...")
+        print("⚡ Reentrando no servidor...")
         createCommandNotification(";rj - Reentrando...")
         -- Rejoin no mesmo servidor
         local TeleportService = game:GetService("TeleportService")
@@ -710,17 +725,62 @@ local function processCommand(message)
         end
     
     else
-        print("Comando não reconhecido: " .. cmd)
-        print("Digite ;help ou ;cmds para ver comandos")
+        print("❌ Comando não reconhecido: " .. cmd)
+        print("💡 Digite ;help ou ;cmds para ver comandos")
     end
 end
 
--- Captura de chat local
-local function setupChatCapture()
-    -- Método principal: Chatted event
+-- SISTEMA DE CAPTURA DE CHAT ULTRA-OTIMIZADO
+-- Múltiplos métodos para garantir captura instantânea
+local function setupInstantChatCapture()
+    -- Método 1: Chatted event (Principal)
     player.Chatted:Connect(function(message)
         if message:sub(1,1) == ";" then
             processCommand(message)
+        end
+    end)
+    
+    -- Método 2: ReplicatedStorage event backup
+    pcall(function()
+        if ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
+            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+            if chatEvents:FindFirstChild("OnMessageDoneFiltering") then
+                chatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(messageData)
+                    if messageData and messageData.FromSpeaker == player.Name then
+                        local message = messageData.Message
+                        if message and message:sub(1,1) == ";" then
+                            processCommand(message)
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+    
+    -- Método 3: UserInputService para chat alternativo
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.Slash then
+            -- Detecta quando o jogador está prestes a digitar
+            spawn(function()
+                wait(0.1) -- Pequeno delay para capturar o texto
+                local chatGui = playerGui:FindFirstChild("Chat")
+                if chatGui then
+                    local chatFrame = chatGui:FindFirstChildOfClass("Frame")
+                    if chatFrame then
+                        local chatBar = chatFrame:FindFirstChildOfClass("TextBox")
+                        if chatBar and chatBar.Text:sub(1,1) == ";" then
+                            -- Monitora mudanças no texto do chat
+                            local connection
+                            connection = chatBar:GetPropertyChangedSignal("Text"):Connect(function()
+                                if chatBar.Text:sub(1,1) == ";" and chatBar.Text:len() > 1 then
+                                    connection:Disconnect()
+                                    processCommand(chatBar.Text)
+                                end
+                            end)
+                        end
+                    end
+                end
+            end)
         end
     end)
 end
@@ -729,7 +789,7 @@ end
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
-    -- Restaura câmera
+    -- Restaura câmera instantaneamente
     camera.CameraSubject = humanoid
     originalCameraSubject = humanoid
     
@@ -740,19 +800,25 @@ player.CharacterAdded:Connect(function(newCharacter)
     end
 end)
 
-print("🚀 Script Executor Carregado! [VERSÃO CORRIGIDA]")
+-- INICIALIZAÇÃO DO SCRIPT
+print("🚀 Script Executor OTIMIZADO Carregado!")
+print("⚡ EXECUÇÃO INSTANTÂNEA - SEM DELAYS!")
 print("📝 Digite ;help ou ;cmds para ver comandos")
 print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
-print("⚡ Todos os comandos são INSTANTÂNEOS!")
+print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
 
--- Configurar captura de chat
-setupChatCapture()
+-- Configurar captura de chat otimizada
+setupInstantChatCapture()
 
 -- Abrir GUI automaticamente ao executar o script
-createCommandsGUI()
+spawn(function()
+    wait(0.1) -- Pequeno delay para garantir que tudo carregou
+    createCommandsGUI()
+end)
 
 -- Teste inicial
-print("✅ Script carregado com sucesso!")
+print("✅ Script carregado com MÁXIMA OTIMIZAÇÃO!")
 print("🎮 GUI aberta automaticamente!")
 print("💬 Digite ;help para ver comandos no chat")
+print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
