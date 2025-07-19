@@ -109,6 +109,10 @@ local externalScripts = {
     ["godmod"] = {
         name = "God Mode",
         url = "https://raw.githubusercontent.com/Shadow6698/godmode/main/Main.txt"
+    },
+    ["float"] = {
+        name = "Float Script (by Gabriel)",
+        url = "https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float"
     }
 }
 
