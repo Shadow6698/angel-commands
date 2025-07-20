@@ -114,6 +114,10 @@ local externalScripts = {
     ["copyhub"] = {
         name = "Copy Hub",
         url = "https://raw.githubusercontent.com/Shadow6698/copychat/main/Main.txt"
+    },
+    ["headsit"] = {
+        name = "Head Sit",
+        url = "https://raw.githubusercontent.com/Shadow6698/headsit/main/Main.txt"
     }
 }
 
@@ -777,6 +781,7 @@ print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
 print("🔗 GLUE agora abre uma GUI completa!")
 print("📋 NOVO: ;copyhub - Copy Hub adicionado!")
+print("🪑 NOVO: ;headsit - Head Sit adicionado!")
 
 -- Configurar captura de chat otimizada
 setupInstantChatCapture()
@@ -794,3 +799,4 @@ print("💬 Digite ;help para ver comandos no chat")
 print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
 print("🔄 Comando ;glue agora carrega GUI externa!")
 print("🆕 Comando ;copyhub - Copy Hub disponível!")
+print("🪑 Comando ;headsit - Head Sit disponível!")
