@@ -420,7 +420,7 @@ local function createCommandsGUI()
     createCommandLabel(";tp spawn - Teleporta para o spawn", false)
     createCommandLabel(";view [nome] - Visualiza outro jogador", false)
     createCommandLabel(";unview - Volta para sua visão", false)
-    createCommandLabel(";glue - Abre GUI para grudar em players", false)
+    createCommandLabel(";glue - Abre GUI para grudar em players + Invisível", false)
     createCommandLabel(";nosit - Impede sentar em qualquer lugar (by Carol)", false)
     createCommandLabel(";rj - Reentrar no servidor atual", false)
     createCommandLabel(";help - Mostra comandos no chat", false)
@@ -641,16 +641,29 @@ local function processCommand(message)
         end
         
     elseif cmd == "glue" then
-        print("⚡ Executando Glue GUI...")
-        local success, result = pcall(function()
+        print("⚡ Executando Glue GUI + Invisível...")
+        
+        -- Executar Glue GUI
+        local glueSuccess, glueResult = pcall(function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/gluegui/main/Main.txt"))()
             print("✅ Glue GUI carregada com sucesso!")
         end)
         
-        if not success then
-            print("❌ Erro ao carregar Glue GUI: " .. tostring(result))
+        if not glueSuccess then
+            print("❌ Erro ao carregar Glue GUI: " .. tostring(glueResult))
         end
-        createCommandNotification(";glue - GUI Carregada")
+        
+        -- Executar script de Invisível
+        local invisibleSuccess, invisibleResult = pcall(function()
+            loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Avatar-invisible-45072"))()
+            print("✅ Script Invisível carregado com sucesso!")
+        end)
+        
+        if not invisibleSuccess then
+            print("❌ Erro ao carregar script Invisível: " .. tostring(invisibleResult))
+        end
+        
+        createCommandNotification(";glue - GUI + Invisível Carregados")
     
     elseif cmd == "nosit" then
         if nositActive then 
@@ -687,7 +700,7 @@ local function processCommand(message)
         print(";tp spawn - Teleporta para o spawn")
         print(";view [nome] - Visualiza outro jogador")
         print(";unview - Volta para sua visão")
-        print(";glue - Abre GUI para grudar em players")
+        print(";glue - Abre GUI para grudar em players + Invisível")
         print(";nosit - Impede sentar em qualquer lugar (by Carol)")
         print(";rj - Reentrar no servidor atual")
         print(";cmds - Abre GUI com comandos")
@@ -779,7 +792,7 @@ print("📝 Digite ;help ou ;cmds para ver comandos")
 print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
-print("🔗 GLUE agora abre uma GUI completa!")
+print("🔗 GLUE agora abre uma GUI completa + Invisível!")
 print("📋 NOVO: ;copyhub - Copy Hub adicionado!")
 print("🪑 NOVO: ;headsit - Head Sit adicionado!")
 
@@ -797,6 +810,6 @@ print("✅ Script carregado com MÁXIMA OTIMIZAÇÃO!")
 print("🎮 GUI aberta automaticamente!")
 print("💬 Digite ;help para ver comandos no chat")
 print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
-print("🔄 Comando ;glue agora carrega GUI externa!")
+print("🔄 Comando ;glue agora carrega GUI externa + Invisível!")
 print("🆕 Comando ;copyhub - Copy Hub disponível!")
 print("🪑 Comando ;headsit - Head Sit disponível!")
