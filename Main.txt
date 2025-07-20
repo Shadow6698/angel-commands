@@ -110,6 +110,10 @@ local externalScripts = {
     ["float"] = {
         name = "Float Script (by Gabriel)",
         url = "https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float"
+    },
+    ["copyhub"] = {
+        name = "Copy Hub",
+        url = "https://raw.githubusercontent.com/Shadow6698/copychat/main/Main.txt"
     }
 }
 
@@ -772,6 +776,7 @@ print("📊 Scripts externos: " .. tostring(#externalScripts))
 print("🗺️ Teleportes: " .. tostring(#teleportLocations))
 print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
 print("🔗 GLUE agora abre uma GUI completa!")
+print("📋 NOVO: ;copyhub - Copy Hub adicionado!")
 
 -- Configurar captura de chat otimizada
 setupInstantChatCapture()
@@ -788,3 +793,4 @@ print("🎮 GUI aberta automaticamente!")
 print("💬 Digite ;help para ver comandos no chat")
 print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
 print("🔄 Comando ;glue agora carrega GUI externa!")
+print("🆕 Comando ;copyhub - Copy Hub disponível!")
