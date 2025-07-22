@@ -1,305 +1,108 @@
--- Script Executor para Roblox com comandos de chat - VERSÃO OTIMIZADA
+-- Script Executor para Roblox - VERSÃO APENAS GUI
 -- Prefix: ;
--- Comandos básicos + Scripts externos + Teleportes + Funcionalidades especiais
--- EXECUÇÃO INSTANTÂNEA SEM DELAYS
+-- Apenas comandos anotados + GUI
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
 local playerGui = player:WaitForChild("PlayerGui")
-local camera = Workspace.CurrentCamera
 
--- Valores padrão
-local defaultWalkSpeed = 16
-local defaultJumpPower = 50
-
--- Variáveis para controle da câmera
-local originalCameraSubject = camera.CameraSubject
-
--- Variáveis para controle do nosit
-local nositActive = false
-local nositConnections = {}
-
--- Lista de scripts externos
-local externalScripts = {
-    ["speedsupreme"] = {
-        name = "Speed Supreme",
-        url = "https://raw.githubusercontent.com/Shadow6698/Speed-2/main/Main.txt"
+-- Lista de comandos anotados (não funcionam)
+local commandsData = {
+    basic = {
+        title = "COMANDOS BÁSICOS",
+        commands = {
+            ";speed [número] - Define velocidade",
+            ";jumppower [número] - Define poder de pulo", 
+            ";resetjp - Reseta poder de pulo",
+            ";resetspeed - Reseta velocidade",
+            ";tp [nome] - Teleporta para jogador",
+            ";tp random - Teleporta para jogador aleatório",
+            ";tp spawn - Teleporta para o spawn",
+            ";view [nome] - Visualiza outro jogador",
+            ";unview - Volta para sua visão",
+            ";glue - Abre GUI para grudar em players + Invisível",
+            ";nosit - Impede sentar em qualquer lugar",
+            ";rj - Reentrar no servidor atual",
+            ";help - Mostra comandos no chat",
+            ";cmds - Abre esta GUI"
+        }
     },
-    ["coolkid"] = {
-        name = "Coolkid Hub",
-        url = "https://raw.githubusercontent.com/Shadow6698/COOLKIDHUB/main/Main.txt"
+    teleports = {
+        title = "TELEPORTES ESPECIAIS",
+        commands = {
+            ";tp salao - TP Salão de festa",
+            ";tp sofa - TP Sofá da casa", 
+            ";tp doceria - TP Doceria",
+            ";tp jogos - TP Sala de jogos",
+            ";tp delegacia - TP Delegacia",
+            ";tp hospital - TP Hospital",
+            ";tp banco - TP Banco principal",
+            ";tp bombeiros - TP Corpo de Bombeiros",
+            ";tp cemiterio - TP Cemitério",
+            ";tp escola - TP Escola",
+            ";tp creche - TP Creche",
+            ";tp caixas - TP Loja de caixas",
+            ";tp lanches - TP Lanchonete",
+            ";tp livraria - TP Livraria",
+            ";tp celulares - TP Loja de Celulares",
+            ";tp coffes - TP Cafeteria",
+            ";tp veterinario - TP Veterinário",
+            ";tp dentista - TP Dentista",
+            ";tp banco2 - TP Banco Secundário",
+            ";tp hotel - TP Hotel",
+            ";tp hamburgueria - TP Hamburgueria",
+            ";tp aeropor to - TP Aeroporto",
+            ";tp shopping - TP Shopping",
+            ";tp ap1 - TP Apartamento 1",
+            ";tp ap2 - TP Apartamento 2",
+            ";tp igreja - TP Igreja",
+            ";tp praia1 - TP Praia 1",
+            ";tp praia2 - TP Praia 2",
+            ";tp praia3 - TP Praia 3",
+            ";tp abandonada - TP Casa Abandonada",
+            ";tp maquinas - TP Sala das Máquinas",
+            ";tp iate - TP Iate",
+            ";tp cabana - TP Cabana",
+            ";tp drones - TP Torres de Drones",
+            ";tp fazenda1 - TP Fazenda 1",
+            ";tp fazenda2 - TP Fazenda 2",
+            ";tp praca - TP Praça Central",
+            ";tp montanha - TP Montanha",
+            ";tp posto - TP Posto de Gasolina",
+            ";tp loja - TP Loja",
+            ";tp parque - TP Parque"
+        }
     },
-    ["portalgun"] = {
-        name = "Portal Gun",
-        url = "https://raw.githubusercontent.com/Shadow6698/Portal-gun-/main/Main.txt"
-    },
-    ["void"] = {
-        name = "Void FE",
-        url = "https://raw.githubusercontent.com/Shadow6698/Void-fe/main/main.txt"
-    },
-    ["gravitygun"] = {
-        name = "Gravity Gun",
-        url = "https://scriptblox.com/raw/Universal-Script-Telekinesis-12332"
-    },
-    ["angelhub"] = {
-        name = "Angel Hub",
-        url = "https://raw.githubusercontent.com/Shadow6698/hubmystery/main/Main.txt"
-    },
-    ["lanterna"] = {
-        name = "Lanterna",
-        url = "https://raw.githubusercontent.com/lumpiasallad/Flashlight-Script-roblox/refs/heads/main/Flashlight.lua"
-    },
-    ["cmd1"] = {
-        name = "Nameless Admin",
-        url = "https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"
-    },
-    ["hub1"] = {
-        name = "Chaos Hub",
-        url = "https://raw.githubusercontent.com/Venom-devX/ChaosHub/main/loader.lua"
-    },
-    ["emotes"] = {
-        name = "Emotes",
-        url = "https://pastebin.com/raw/eCpipCTH"
-    },
-    ["gigante"] = {
-        name = "Avatar gigante",
-        url = "https://rawscripts.net/raw/Brookhaven-RP-FE-BIG-AVATAR-43381"
-    },
-    ["bola"] = {
-        name = "Virar bola",
-        url = "https://rawscripts.net/raw/Universal-Script-Fe-ball-rolL-9835"
-    },
-    ["bughub"] = {
-        name = "Bug Hub",
-        url = "https://rawscripts.net/raw/Brookhaven-RP-Glitch-fe-44756"
-    },
-    ["infinite"] = {
-        name = "Pulo infinito",
-        url = "https://pastebin.com/raw/zqyDSUWX"
-    },
-    ["noclip"] = {
-        name = "NoClip",
-        url = "https://pastebin.com/raw/BK4Q0DfP"
-    },
-    ["invisible"] = {
-        name = "Invisível",
-        url = "https://rawscripts.net/raw/Brookhaven-RP-Avatar-invisible-45072"
-    },
-    ["cmd2"] = {
-        name = "Infinite Yield",
-        url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-    },
-    ["hub2"] = {
-        name = "Coquette Hub",
-        url = "https://rawscripts.net/raw/Brookhaven-RP-Coquette-Hub-41921"
-    },
-    ["godmod"] = {
-        name = "God Mode",
-        url = "https://raw.githubusercontent.com/Shadow6698/godmode/main/Main.txt"
-    },
-    ["float"] = {
-        name = "Float Script (by Gabriel)",
-        url = "https://raw.githubusercontent.com/GhostPlayer352/Test4/main/Float"
-    },
-    ["copyhub"] = {
-        name = "Copy Hub",
-        url = "https://raw.githubusercontent.com/Shadow6698/copychat/main/Main.txt"
-    },
-    ["headsit"] = {
-        name = "Head Sit",
-        url = "https://raw.githubusercontent.com/Shadow6698/headsit/main/Main.txt"
+    scripts = {
+        title = "SCRIPTS EXTERNOS",
+        commands = {
+            ";speedsupreme - Speed Supreme",
+            ";coolkid - Coolkid Hub",
+            ";portalgun - Portal Gun",
+            ";void - Void FE",
+            ";gravitygun - Gravity Gun",
+            ";angelhub - Angel Hub",
+            ";lanterna - Lanterna",
+            ";cmd1 - Nameless Admin",
+            ";hub1 - Chaos Hub",
+            ";emotes - Emotes",
+            ";gigante - Avatar gigante",
+            ";bola - Virar bola",
+            ";bughub - Bug Hub",
+            ";infinite - Pulo infinito",
+            ";noclip - NoClip",
+            ";invisible - Invisível",
+            ";cmd2 - Infinite Yield",
+            ";hub2 - Coquette Hub",
+            ";godmod - God Mode",
+            ";float - Float Script",
+            ";copyhub - Copy Hub",
+            ";headsit - Head Sit"
+        }
     }
 }
-
--- Lista de teleportes para localizações
-local teleportLocations = {
-    ["salao"] = {name = "Salão de festa", cframe = CFrame.new(-76, 4, -123)},
-    ["sofa"] = {name = "Sofá da casa", cframe = CFrame.new(-82, 22, -128)},
-    ["doceria"] = {name = "Doceria", cframe = CFrame.new(-125, 6, -120)},
-    ["jogos"] = {name = "Sala de jogos", cframe = CFrame.new(-172, 1, -126)},
-    ["delegacia"] = {name = "Delegacia", cframe = CFrame.new(-121, 4, 31)},
-    ["hospital"] = {name = "Hospital", cframe = CFrame.new(-293, 4, 40)},
-    ["banco"] = {name = "Banco principal", cframe = CFrame.new(-358, 25, -143)},
-    ["bombeiros"] = {name = "Corpo de Bombeiros", cframe = CFrame.new(-469, 6, -122)},
-    ["cemiterio"] = {name = "Cemitério", cframe = CFrame.new(-486, 7, 56)},
-    ["escola"] = {name = "Escola", cframe = CFrame.new(-315, 6, 211)},
-    ["creche"] = {name = "Creche", cframe = CFrame.new(-157, 4, 125)},
-    ["caixas"] = {name = "Loja de caixas", cframe = CFrame.new(-162, 4, 268)},
-    ["lanches"] = {name = "Lanchonete", cframe = CFrame.new(-169, 20, 291)},
-    ["livraria"] = {name = "Livraria", cframe = CFrame.new(-129, 4, 259)},
-    ["celulares"] = {name = "Loja de Celulares", cframe = CFrame.new(-127, 21, 253)},
-    ["coffes"] = {name = "Cafeteria", cframe = CFrame.new(-96, 5, 250)},
-    ["veterinario"] = {name = "Veterinário", cframe = CFrame.new(-100, 22, 262)},
-    ["dentista"] = {name = "Dentista", cframe = CFrame.new(-53, 20, 268)},
-    ["banco2"] = {name = "Banco Secundário", cframe = CFrame.new(3, 4, 257)},
-    ["hotel"] = {name = "Hotel", cframe = CFrame.new(199, 2, 182)},
-    ["hamburgueria"] = {name = "Hamburgueria", cframe = CFrame.new(156, 8, 39)},
-    ["aeroporto"] = {name = "Aeroporto", cframe = CFrame.new(317, 7, 40)},
-    ["shopping"] = {name = "Shopping", cframe = CFrame.new(165, 5, -158)},
-    ["ap1"] = {name = "Apartamento 1", cframe = CFrame.new(-35, 20, -126)},
-    ["ap2"] = {name = "Apartamento 2", cframe = CFrame.new(-34, 37, -136)},
-    ["igreja"] = {name = "Igreja", cframe = CFrame.new(-64, 37, -192)},
-    ["praia1"] = {name = "Praia 1", cframe = CFrame.new(70, 8, -1433)},
-    ["praia2"] = {name = "Praia 2", cframe = CFrame.new(-218, 1, 760)},
-    ["praia3"] = {name = "Praia 3", cframe = CFrame.new(15, 4, 1460)},
-    ["abandonada"] = {name = "Casa Abandonada", cframe = CFrame.new(1044, 8, 54)},
-    ["maquinas"] = {name = "Sala das Máquinas", cframe = CFrame.new(235, 4, 813)},
-    ["iate"] = {name = "Iate", cframe = CFrame.new(-125, 33, 856)},
-    ["cabana"] = {name = "Cabana", cframe = CFrame.new(-249, 6, 1078)},
-    ["drones"] = {name = "Torres de Drones", cframe = CFrame.new(-680, 252, 762)},
-    ["fazenda1"] = {name = "Fazenda 1", cframe = CFrame.new(-851, 6, -57)},
-    ["fazenda2"] = {name = "Fazenda 2", cframe = CFrame.new(-863, 6, -375)},
-    ["praça"] = {name = "Praça Central", cframe = CFrame.new(-13, 6, -17)},
-    ["montanha"] = {name = "Montanha", cframe = CFrame.new(-580, 1, 1026)},
-    ["posto"] = {name = "Posto de Gasolina", cframe = CFrame.new(133, 2, -338)},
-    ["loja"] = {name = "Loja", cframe = CFrame.new(-39, 2, 255)},
-    ["parque"] = {name = "Parque", cframe = CFrame.new(180, 5, -173)}
-}
-
--- Função para criar notificação de comando (mantida igual)
-local function createCommandNotification(commandText)
-    spawn(function()
-        -- Remove notificação existente se houver
-        local existingNotif = playerGui:FindFirstChild("CommandNotification")
-        if existingNotif then
-            existingNotif:Destroy()
-        end
-        
-        -- Criar ScreenGui para notificação
-        local notifGui = Instance.new("ScreenGui")
-        notifGui.Name = "CommandNotification"
-        notifGui.Parent = playerGui
-        notifGui.ResetOnSpawn = false
-        
-        -- Frame da notificação
-        local notifFrame = Instance.new("Frame")
-        notifFrame.Size = UDim2.new(0, 300, 0, 50)
-        notifFrame.Position = UDim2.new(0.5, -150, 0, -60)
-        notifFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        notifFrame.BorderSizePixel = 0
-        notifFrame.Parent = notifGui
-        
-        -- Borda da notificação
-        local notifBorder = Instance.new("UIStroke")
-        notifBorder.Color = Color3.fromRGB(100, 200, 255)
-        notifBorder.Thickness = 2
-        notifBorder.Parent = notifFrame
-        
-        -- Cantos arredondados
-        local notifCorner = Instance.new("UICorner")
-        notifCorner.CornerRadius = UDim.new(0, 8)
-        notifCorner.Parent = notifFrame
-        
-        -- Texto da notificação
-        local notifText = Instance.new("TextLabel")
-        notifText.Size = UDim2.new(1, -20, 1, 0)
-        notifText.Position = UDim2.new(0, 10, 0, 0)
-        notifText.BackgroundTransparency = 1
-        notifText.Text = "Comando: " .. commandText
-        notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        notifText.TextScaled = true
-        notifText.Font = Enum.Font.SourceSansBold
-        notifText.Parent = notifFrame
-        
-        -- Animação de entrada
-        local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0.5, -150, 0, 20)
-        })
-        tweenIn:Play()
-        
-        -- Auto-remoção após 1 segundo
-        wait(1)
-        local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Position = UDim2.new(0.5, -150, 0, -60)
-        })
-        tweenOut:Play()
-        tweenOut.Completed:Connect(function()
-            notifGui:Destroy()
-        end)
-    end)
-end
-
--- Função para executar script externo - OTIMIZADA PARA EXECUÇÃO INSTANTÂNEA
-local function executeExternalScript(url, name)
-    -- Execução síncrona e imediata
-    local success, result = pcall(function()
-        local script = game:HttpGet(url)
-        local func = loadstring(script)
-        if func then
-            func()
-            print("✅ Script executado instantaneamente: " .. name)
-        else
-            print("❌ Erro ao carregar: " .. name)
-        end
-    end)
-    
-    if not success then
-        print("❌ Erro ao executar " .. name .. ": " .. tostring(result))
-    end
-end
-
--- Função para encontrar jogador por nome parcial - OTIMIZADA
-local function findPlayer(name)
-    name = name:lower()
-    local players = Players:GetPlayers()
-    for i = 1, #players do
-        local p = players[i]
-        if p.Name:lower():find(name) or p.DisplayName:lower():find(name) then
-            return p
-        end
-    end
-    return nil
-end
-
--- Funções do sistema NoSit - OTIMIZADAS
-local function protectHumanoid(humanoid)
-    if not humanoid then return end
-    humanoid.Sit = false
-    table.insert(nositConnections, humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
-        if nositActive and humanoid.Sit then
-            humanoid.Sit = false
-        end
-    end))
-end
-
-local function removeSeats()
-    local descendants = Workspace:GetDescendants()
-    for i = 1, #descendants do
-        local obj = descendants[i]
-        if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
-            obj:Destroy()
-        end
-    end
-end
-
-local function monitorNewSeats()
-    table.insert(nositConnections, Workspace.DescendantAdded:Connect(function(obj)
-        if nositActive and (obj:IsA("Seat") or obj:IsA("VehicleSeat")) then
-            obj:Destroy()
-        end
-    end))
-end
-
-local function monitorCharacterForNoSit()
-    local function onCharacter(char)
-        local humanoid = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid")
-        protectHumanoid(humanoid)
-    end
-    if player.Character then
-        onCharacter(player.Character)
-    end
-    table.insert(nositConnections, player.CharacterAdded:Connect(onCharacter))
-end
 
 -- Função para criar GUI de comandos
 local function createCommandsGUI()
@@ -409,45 +212,29 @@ local function createCommandsGUI()
         return label
     end
     
-    -- Adicionar comandos básicos
-    createCommandLabel("COMANDOS BÁSICOS", true)
-    createCommandLabel(";speed [número] - Define velocidade", false)
-    createCommandLabel(";jumppower [número] - Define poder de pulo", false)
-    createCommandLabel(";resetjp - Reseta poder de pulo", false)
-    createCommandLabel(";resetspeed - Reseta velocidade", false)
-    createCommandLabel(";tp [nome] - Teleporta para jogador", false)
-    createCommandLabel(";tp random - Teleporta para jogador aleatório", false)
-    createCommandLabel(";tp spawn - Teleporta para o spawn", false)
-    createCommandLabel(";view [nome] - Visualiza outro jogador", false)
-    createCommandLabel(";unview - Volta para sua visão", false)
-    createCommandLabel(";glue - Abre GUI para grudar em players + Invisível", false)
-    createCommandLabel(";nosit - Impede sentar em qualquer lugar (by Carol)", false)
-    createCommandLabel(";rj - Reentrar no servidor atual", false)
-    createCommandLabel(";help - Mostra comandos no chat", false)
-    createCommandLabel(";cmds - Abre esta GUI", false)
-    
-    -- Espaço
-    local spacer1 = Instance.new("Frame")
-    spacer1.Size = UDim2.new(1, 0, 0, 10)
-    spacer1.BackgroundTransparency = 1
-    spacer1.Parent = scrollFrame
-    
-    -- Adicionar teleportes para localizações
-    createCommandLabel("TELEPORTES PARA LOCALIZAÇÕES", true)
-    for cmdName, locationInfo in pairs(teleportLocations) do
-        createCommandLabel(";" .. cmdName .. " - " .. locationInfo.name, false)
+    -- Função para criar espaçador
+    local function createSpacer()
+        local spacer = Instance.new("Frame")
+        spacer.Size = UDim2.new(1, 0, 0, 10)
+        spacer.BackgroundTransparency = 1
+        spacer.Parent = scrollFrame
+        return spacer
     end
     
-    -- Espaço
-    local spacer2 = Instance.new("Frame")
-    spacer2.Size = UDim2.new(1, 0, 0, 10)
-    spacer2.BackgroundTransparency = 1
-    spacer2.Parent = scrollFrame
-    
-    -- Adicionar scripts externos
-    createCommandLabel("SCRIPTS EXTERNOS", true)
-    for cmdName, scriptInfo in pairs(externalScripts) do
-        createCommandLabel(";" .. cmdName .. " - " .. scriptInfo.name, false)
+    -- Adicionar todas as seções
+    for _, section in pairs({"basic", "teleports", "scripts"}) do
+        local sectionData = commandsData[section]
+        
+        -- Título da seção
+        createCommandLabel(sectionData.title, true)
+        
+        -- Comandos da seção
+        for _, command in pairs(sectionData.commands) do
+            createCommandLabel(command, false)
+        end
+        
+        -- Espaçador entre seções
+        createSpacer()
     end
     
     -- Ajustar tamanho do scroll
@@ -471,345 +258,71 @@ local function createCommandsGUI()
     end)
 end
 
--- Função para processar comandos - EXTREMAMENTE OTIMIZADA
+-- Função para processar comando ;cmds
 local function processCommand(message)
-    -- Verificação instantânea do prefixo
-    if message:sub(1, 1) ~= ";" then
-        return
-    end
-    
-    -- Parse rápido do comando
-    local command = message:sub(2)
-    local spacePos = command:find(" ")
-    local cmd, args
-    
-    if spacePos then
-        cmd = command:sub(1, spacePos - 1):lower()
-        args = command:sub(spacePos + 1)
-    else
-        cmd = command:lower()
-        args = ""
-    end
-    
-    -- Parse de argumentos apenas quando necessário
-    local function getArgs()
-        local argList = {}
-        for word in args:gmatch("%S+") do
-            table.insert(argList, word)
-        end
-        return argList
-    end
-    
-    -- Verificação de scripts externos - PRIMEIRA PRIORIDADE
-    if externalScripts[cmd] then
-        local scriptInfo = externalScripts[cmd]
-        print("⚡ Executando script externo: " .. scriptInfo.name)
-        executeExternalScript(scriptInfo.url, scriptInfo.name)
-        createCommandNotification(";" .. cmd .. " - " .. scriptInfo.name)
-        return
-    end
-    
-    -- Verificação de teleportes - SEGUNDA PRIORIDADE
-    if teleportLocations[cmd] then
-        local locationInfo = teleportLocations[cmd]
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            character.HumanoidRootPart.CFrame = locationInfo.cframe
-            print("⚡ Teleportado instantaneamente para: " .. locationInfo.name)
-            createCommandNotification(";" .. cmd .. " - " .. locationInfo.name)
-        else
-            print("❌ Personagem não encontrado para teleporte")
-        end
-        return
-    end
-    
-    -- Comandos básicos - EXECUÇÃO INSTANTÂNEA
-    if cmd == "speed" then
-        local argList = getArgs()
-        local speed = tonumber(argList[1])
-        if speed then
-            if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.WalkSpeed = speed
-                print("⚡ Velocidade: " .. speed)
-                createCommandNotification(";speed " .. speed)
-            end
-        else
-            print("Uso: ;speed [número]")
-        end
-    
-    elseif cmd == "jumppower" then
-        local argList = getArgs()
-        local jumpPower = tonumber(argList[1])
-        if jumpPower then
-            if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.JumpPower = jumpPower
-                print("⚡ Pulo: " .. jumpPower)
-                createCommandNotification(";jumppower " .. jumpPower)
-            end
-        else
-            print("Uso: ;jumppower [número]")
-        end
-    
-    elseif cmd == "resetjp" then
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = defaultJumpPower
-            print("⚡ Pulo resetado")
-            createCommandNotification(";resetjp")
-        end
-    
-    elseif cmd == "resetspeed" then
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = defaultWalkSpeed
-            print("⚡ Velocidade resetada")
-            createCommandNotification(";resetspeed")
-        end
-    
-    elseif cmd == "tp" then
-        local argList = getArgs()
-        local targetName = argList[1]
-        if targetName then
-            -- Random
-            if targetName:lower() == "random" then
-                local allPlayers = Players:GetPlayers()
-                local otherPlayers = {}
-                
-                for i = 1, #allPlayers do
-                    local p = allPlayers[i]
-                    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                        table.insert(otherPlayers, p)
-                    end
-                end
-                
-                if #otherPlayers > 0 then
-                    local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
-                        print("⚡ TP random: " .. randomPlayer.Name)
-                        createCommandNotification(";tp random -> " .. randomPlayer.Name)
-                    end
-                else
-                    print("❌ Nenhum jogador disponível")
-                end
-                return
-            end
-            
-            -- Spawn
-            if targetName:lower() == "spawn" then
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-                    print("⚡ TP spawn")
-                    createCommandNotification(";tp spawn")
-                end
-                return
-            end
-            
-            -- Jogador específico
-            local targetPlayer = findPlayer(targetName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                    print("⚡ TP: " .. targetPlayer.Name)
-                    createCommandNotification(";tp " .. targetPlayer.Name)
-                end
-            else
-                print("❌ Jogador não encontrado: " .. targetName)
-            end
-        else
-            print("Uso: ;tp [nome/random/spawn]")
-        end
-    
-    elseif cmd == "view" then
-        local argList = getArgs()
-        local targetName = argList[1]
-        if targetName then
-            local targetPlayer = findPlayer(targetName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = targetPlayer.Character.Humanoid
-                print("⚡ Visualizando: " .. targetPlayer.Name)
-                createCommandNotification(";view " .. targetPlayer.Name)
-            else
-                print("❌ Jogador não encontrado: " .. targetName)
-            end
-        else
-            print("Uso: ;view [nome]")
-        end
-        
-    elseif cmd == "unview" then
-        if character and character:FindFirstChild("Humanoid") then
-            camera.CameraSubject = character.Humanoid
-            print("⚡ Visão restaurada")
-            createCommandNotification(";unview")
-        end
-        
-    elseif cmd == "glue" then
-        print("⚡ Executando Glue GUI + Invisível...")
-        
-        -- Executar Glue GUI
-        local glueSuccess, glueResult = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/gluegui/main/Main.txt"))()
-            print("✅ Glue GUI carregada com sucesso!")
-        end)
-        
-        if not glueSuccess then
-            print("❌ Erro ao carregar Glue GUI: " .. tostring(glueResult))
-        end
-        
-        -- Executar script de Invisível
-        local invisibleSuccess, invisibleResult = pcall(function()
-            loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Avatar-invisible-45072"))()
-            print("✅ Script Invisível carregado com sucesso!")
-        end)
-        
-        if not invisibleSuccess then
-            print("❌ Erro ao carregar script Invisível: " .. tostring(invisibleResult))
-        end
-        
-        createCommandNotification(";glue - GUI + Invisível Carregados")
-    
-    elseif cmd == "nosit" then
-        if nositActive then 
-            print("❌ NoSit já está ativo")
-            return 
-        end
-        nositActive = true
-        removeSeats()
-        monitorNewSeats()
-        monitorCharacterForNoSit()
-        print("⚡ NoSit ativado instantaneamente - Proteção contra sentar (by Carol)")
-        createCommandNotification(";nosit ativado (by Carol)")
-    
-    elseif cmd == "rj" then
-        print("⚡ Reentrando no servidor...")
-        createCommandNotification(";rj - Reentrando...")
-        -- Rejoin no mesmo servidor
-        local TeleportService = game:GetService("TeleportService")
-        TeleportService:Teleport(game.PlaceId, player)
-    
-    elseif cmd == "cmds" then
+    if message:lower() == ";cmds" then
         createCommandsGUI()
-        createCommandNotification(";cmds")
-        
-    elseif cmd == "help" or cmd == "ajuda" then
-        print("=== COMANDOS DISPONÍVEIS ===")
-        print("Comandos básicos:")
-        print(";speed [número] - Define velocidade")
-        print(";jumppower [número] - Define poder de pulo")
-        print(";resetjp - Reseta poder de pulo")
-        print(";resetspeed - Reseta velocidade")
-        print(";tp [nome] - Teleporta para jogador")
-        print(";tp random - Teleporta para jogador aleatório")
-        print(";tp spawn - Teleporta para o spawn")
-        print(";view [nome] - Visualiza outro jogador")
-        print(";unview - Volta para sua visão")
-        print(";glue - Abre GUI para grudar em players + Invisível")
-        print(";nosit - Impede sentar em qualquer lugar (by Carol)")
-        print(";rj - Reentrar no servidor atual")
-        print(";cmds - Abre GUI com comandos")
-        print("")
-        print("Scripts externos:")
-        for cmdName, scriptInfo in pairs(externalScripts) do
-            print(";" .. cmdName .. " - " .. scriptInfo.name)
-        end
-        print("")
-        print("Teleportes para localizações:")
-        for cmdName, locationInfo in pairs(teleportLocations) do
-            print(";" .. cmdName .. " - " .. locationInfo.name)
-        end
-    
-    else
-        print("❌ Comando não reconhecido: " .. cmd)
-        print("💡 Digite ;help ou ;cmds para ver comandos")
+        print("📋 GUI de comandos aberta!")
     end
 end
 
--- SISTEMA DE CAPTURA DE CHAT ULTRA-OTIMIZADO
--- Múltiplos métodos para garantir captura instantânea
-local function setupInstantChatCapture()
-    -- Método 1: Chatted event (Principal)
-    player.Chatted:Connect(function(message)
-        if message:sub(1,1) == ";" then
-            processCommand(message)
+-- Sistema de captura de chat para ;cmds
+player.Chatted:Connect(function(message)
+    processCommand(message)
+end)
+
+-- Função para executar os 3 scripts automáticos
+local function executeAutoScripts()
+    print("⚡ Executando 3 scripts automáticos...")
+    
+    -- Script 1
+    spawn(function()
+        local success1, error1 = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando1/main/Main.txt"))()
+            print("✅ Comando 1 executado com sucesso!")
+        end)
+        if not success1 then
+            print("❌ Erro no Comando 1: " .. tostring(error1))
         end
     end)
     
-    -- Método 2: ReplicatedStorage event backup
-    pcall(function()
-        if ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
-            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-            if chatEvents:FindFirstChild("OnMessageDoneFiltering") then
-                chatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(messageData)
-                    if messageData and messageData.FromSpeaker == player.Name then
-                        local message = messageData.Message
-                        if message and message:sub(1,1) == ";" then
-                            processCommand(message)
-                        end
-                    end
-                end)
-            end
+    -- Script 2
+    spawn(function()
+        local success2, error2 = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando2/main/Main.txt"))()
+            print("✅ Comando 2 executado com sucesso!")
+        end)
+        if not success2 then
+            print("❌ Erro no Comando 2: " .. tostring(error2))
         end
     end)
     
-    -- Método 3: UserInputService para chat alternativo
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if input.KeyCode == Enum.KeyCode.Slash then
-            -- Detecta quando o jogador está prestes a digitar
-            spawn(function()
-                wait(0.1) -- Pequeno delay para capturar o texto
-                local chatGui = playerGui:FindFirstChild("Chat")
-                if chatGui then
-                    local chatFrame = chatGui:FindFirstChildOfClass("Frame")
-                    if chatFrame then
-                        local chatBar = chatFrame:FindFirstChildOfClass("TextBox")
-                        if chatBar and chatBar.Text:sub(1,1) == ";" then
-                            -- Monitora mudanças no texto do chat
-                            local connection
-                            connection = chatBar:GetPropertyChangedSignal("Text"):Connect(function()
-                                if chatBar.Text:sub(1,1) == ";" and chatBar.Text:len() > 1 then
-                                    connection:Disconnect()
-                                    processCommand(chatBar.Text)
-                                end
-                            end)
-                        end
-                    end
-                end
-            end)
+    -- Script 3
+    spawn(function()
+        local success3, error3 = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando3/main/Main.txt"))()
+            print("✅ Comando 3 executado com sucesso!")
+        end)
+        if not success3 then
+            print("❌ Erro no Comando 3: " .. tostring(error3))
         end
     end)
 end
 
--- Atualiza referências do personagem quando respawna
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoid = character:WaitForChild("Humanoid")
-    -- Restaura câmera instantaneamente
-    camera.CameraSubject = humanoid
-    originalCameraSubject = humanoid
-end)
+-- INICIALIZAÇÃO
+print("🚀 Script de Comandos Anotados Carregado!")
+print("⚡ Executando 3 scripts automáticos...")
 
--- INICIALIZAÇÃO DO SCRIPT
-print("🚀 Script Executor OTIMIZADO Carregado!")
-print("⚡ EXECUÇÃO INSTANTÂNEA - SEM DELAYS!")
-print("📝 Digite ;help ou ;cmds para ver comandos")
-print("📊 Scripts externos: " .. tostring(#externalScripts))
-print("🗺️ Teleportes: " .. tostring(#teleportLocations))
-print("🔥 TODOS OS COMANDOS SÃO EXECUTADOS INSTANTANEAMENTE!")
-print("🔗 GLUE agora abre uma GUI completa + Invisível!")
-print("📋 NOVO: ;copyhub - Copy Hub adicionado!")
-print("🪑 NOVO: ;headsit - Head Sit adicionado!")
+-- Executar os 3 scripts automaticamente
+executeAutoScripts()
 
--- Configurar captura de chat otimizada
-setupInstantChatCapture()
+print("💡 Digite ;cmds para abrir a GUI")
+print("⚠️ ATENÇÃO: Comandos são apenas para referência - NÃO FUNCIONAM!")
 
--- Abrir GUI automaticamente ao executar o script
+-- Abrir GUI automaticamente
 spawn(function()
-    wait(0.1) -- Pequeno delay para garantir que tudo carregou
+    wait(0.5)
     createCommandsGUI()
+    print("🎮 GUI aberta automaticamente!")
+    print("🔥 Todos os scripts foram executados!")
 end)
-
--- Teste inicial
-print("✅ Script carregado com MÁXIMA OTIMIZAÇÃO!")
-print("🎮 GUI aberta automaticamente!")
-print("💬 Digite ;help para ver comandos no chat")
-print("⚡ Sistema de chat ULTRA-RESPONSIVO ativo!")
-print("🔄 Comando ;glue agora carrega GUI externa + Invisível!")
-print("🆕 Comando ;copyhub - Copy Hub disponível!")
-print("🪑 Comando ;headsit - Head Sit disponível!")
