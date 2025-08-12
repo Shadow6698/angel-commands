@@ -39,7 +39,7 @@ local function createGUI()
     local OpenButton = Instance.new("TextButton")
     OpenButton.Name = "OpenButton"
     OpenButton.Size = UDim2.new(0, 60, 0, 30)
-    OpenButton.Position = UDim2.new(0, 10, 1, -60)
+    OpenButton.Position = UDim2.new(0, 10, 1, -90)
     OpenButton.BackgroundColor3 = Color3.new(0, 0, 0)
     OpenButton.BorderColor3 = Color3.new(1, 1, 1)
     OpenButton.BorderSizePixel = 2
