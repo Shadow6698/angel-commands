@@ -1,328 +1,375 @@
--- Script Executor para Roblox - VERSÃO APENAS GUI
--- Prefix: ;
--- Apenas comandos anotados + GUI
-
+-- Serviços
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Lista de comandos anotados (não funcionam)
-local commandsData = {
-    basic = {
-        title = "COMANDOS BÁSICOS",
-        commands = {
-            ";speed [número] - Define velocidade",
-            ";jumppower [número] - Define poder de pulo", 
-            ";resetjp - Reseta poder de pulo",
-            ";resetspeed - Reseta velocidade",
-            ";tp [nome] - Teleporta para jogador",
-            ";tp random - Teleporta para jogador aleatório",
-            ";tp spawn - Teleporta para o spawn",
-            ";view [nome] - Visualiza outro jogador",
-            ";unview - Volta para sua visão",
-            ";glue - Abre GUI para grudar em players + Invisível",
-            ";nosit - Impede sentar em qualquer lugar",
-            ";rj - Reentrar no servidor atual",
-            ";help - Mostra comandos no chat",
-            ";cmds - Abre esta GUI"
-        }
-    },
-    teleports = {
-        title = "TELEPORTES ESPECIAIS",
-        commands = {
-            ";tp salao - TP Salão de festa",
-            ";tp sofa - TP Sofá da casa", 
-            ";tp doceria - TP Doceria",
-            ";tp jogos - TP Sala de jogos",
-            ";tp delegacia - TP Delegacia",
-            ";tp hospital - TP Hospital",
-            ";tp banco - TP Banco principal",
-            ";tp bombeiros - TP Corpo de Bombeiros",
-            ";tp cemiterio - TP Cemitério",
-            ";tp escola - TP Escola",
-            ";tp creche - TP Creche",
-            ";tp caixas - TP Loja de caixas",
-            ";tp lanches - TP Lanchonete",
-            ";tp livraria - TP Livraria",
-            ";tp celulares - TP Loja de Celulares",
-            ";tp coffes - TP Cafeteria",
-            ";tp veterinario - TP Veterinário",
-            ";tp dentista - TP Dentista",
-            ";tp banco2 - TP Banco Secundário",
-            ";tp hotel - TP Hotel",
-            ";tp hamburgueria - TP Hamburgueria",
-            ";tp aeropor to - TP Aeroporto",
-            ";tp shopping - TP Shopping",
-            ";tp ap1 - TP Apartamento 1",
-            ";tp ap2 - TP Apartamento 2",
-            ";tp igreja - TP Igreja",
-            ";tp praia1 - TP Praia 1",
-            ";tp praia2 - TP Praia 2",
-            ";tp praia3 - TP Praia 3",
-            ";tp abandonada - TP Casa Abandonada",
-            ";tp maquinas - TP Sala das Máquinas",
-            ";tp iate - TP Iate",
-            ";tp cabana - TP Cabana",
-            ";tp drones - TP Torres de Drones",
-            ";tp fazenda1 - TP Fazenda 1",
-            ";tp fazenda2 - TP Fazenda 2",
-            ";tp praca - TP Praça Central",
-            ";tp montanha - TP Montanha",
-            ";tp posto - TP Posto de Gasolina",
-            ";tp loja - TP Loja",
-            ";tp parque - TP Parque"
-        }
-    },
-    scripts = {
-        title = "SCRIPTS EXTERNOS",
-        commands = {
-            ";speedsupreme - Speed Supreme",
-            ";coolkid - Coolkid Hub",
-            ";portalgun - Portal Gun",
-            ";void - Void FE",
-            ";gravitygun - Gravity Gun",
-            ";angelhub - Angel Hub",
-            ";lanterna - Lanterna",
-            ";cmd1 - Nameless Admin",
-            ";hub1 - Chaos Hub",
-            ";emotes - Emotes",
-            ";gigante - Avatar gigante",
-            ";bola - Virar bola",
-            ";bughub - Bug Hub",
-            ";infinite - Pulo infinito",
-            ";noclip - NoClip",
-            ";invisible - Invisível",
-            ";cmd2 - Infinite Yield",
-            ";hub2 - Coquette Hub",
-            ";godmod - God Mode",
-            ";float - Float Script",
-            ";copyhub - Copy Hub",
-            ";headsit - Head Sit"
-        }
+-- Variáveis globais
+local prefix = ";"
+local isGuiOpen = false
+local bugConnections = {}
+local viewingPlayer = nil
+local gluedPlayer = nil
+local glueConnection = nil
+
+-- Função para encontrar player
+local function findPlayer(name)
+    name = name:lower()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name:lower():find(name) or player.DisplayName:lower():find(name) then
+            return player
+        end
+    end
+    return nil
+end
+
+-- Criar GUI principal
+local function createGUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "CommandsGui"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = PlayerGui
+
+    -- Botão para abrir GUI
+    local OpenButton = Instance.new("TextButton")
+    OpenButton.Name = "OpenButton"
+    OpenButton.Size = UDim2.new(0, 60, 0, 30)
+    OpenButton.Position = UDim2.new(0, 10, 1, -60)
+    OpenButton.BackgroundColor3 = Color3.new(0, 0, 0)
+    OpenButton.BorderColor3 = Color3.new(1, 1, 1)
+    OpenButton.BorderSizePixel = 2
+    OpenButton.Text = "CMDS"
+    OpenButton.TextColor3 = Color3.new(1, 1, 1)
+    OpenButton.TextScaled = true
+    OpenButton.Font = Enum.Font.SourceSansBold
+    OpenButton.Active = true
+    OpenButton.Parent = ScreenGui
+
+    -- Frame principal dos comandos
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0, -300, 1, -410)
+    MainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    MainFrame.BorderColor3 = Color3.new(1, 1, 1)
+    MainFrame.BorderSizePixel = 2
+    MainFrame.Visible = false
+    MainFrame.Parent = ScreenGui
+
+    -- Título com botão X
+    local TitleFrame = Instance.new("Frame")
+    TitleFrame.Size = UDim2.new(1, 0, 0, 30)
+    TitleFrame.Position = UDim2.new(0, 0, 0, 0)
+    TitleFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    TitleFrame.BorderColor3 = Color3.new(1, 1, 1)
+    TitleFrame.BorderSizePixel = 1
+    TitleFrame.Parent = MainFrame
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -30, 1, 0)
+    Title.Position = UDim2.new(0, 0, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "COMANDOS"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.TextScaled = true
+    Title.Font = Enum.Font.SourceSansBold
+    Title.Parent = TitleFrame
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 30, 1, 0)
+    CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    CloseButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    CloseButton.BorderColor3 = Color3.new(1, 1, 1)
+    CloseButton.BorderSizePixel = 1
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.new(1, 1, 1)
+    CloseButton.TextScaled = true
+    CloseButton.Font = Enum.Font.SourceSansBold
+    CloseButton.Parent = TitleFrame
+
+    -- Frame para prefix
+    local PrefixFrame = Instance.new("Frame")
+    PrefixFrame.Size = UDim2.new(1, -10, 0, 30)
+    PrefixFrame.Position = UDim2.new(0, 5, 0, 35)
+    PrefixFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    PrefixFrame.BorderColor3 = Color3.new(1, 1, 1)
+    PrefixFrame.BorderSizePixel = 1
+    PrefixFrame.Parent = MainFrame
+
+    local PrefixLabel = Instance.new("TextLabel")
+    PrefixLabel.Size = UDim2.new(0, 60, 1, 0)
+    PrefixLabel.Position = UDim2.new(0, 0, 0, 0)
+    PrefixLabel.BackgroundTransparency = 1
+    PrefixLabel.Text = "Prefix:"
+    PrefixLabel.TextColor3 = Color3.new(1, 1, 1)
+    PrefixLabel.TextScaled = true
+    PrefixLabel.Font = Enum.Font.SourceSans
+    PrefixLabel.Parent = PrefixFrame
+
+    local PrefixBox = Instance.new("TextBox")
+    PrefixBox.Size = UDim2.new(1, -65, 1, -4)
+    PrefixBox.Position = UDim2.new(0, 62, 0, 2)
+    PrefixBox.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    PrefixBox.BorderColor3 = Color3.new(1, 1, 1)
+    PrefixBox.BorderSizePixel = 1
+    PrefixBox.Text = prefix
+    PrefixBox.TextColor3 = Color3.new(1, 1, 1)
+    PrefixBox.TextScaled = true
+    PrefixBox.Font = Enum.Font.SourceSans
+    PrefixBox.Parent = PrefixFrame
+
+    -- TextBox para comandos
+    local CommandBox = Instance.new("TextBox")
+    CommandBox.Size = UDim2.new(1, -10, 0, 30)
+    CommandBox.Position = UDim2.new(0, 5, 0, 70)
+    CommandBox.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    CommandBox.BorderColor3 = Color3.new(1, 1, 1)
+    CommandBox.BorderSizePixel = 1
+    CommandBox.PlaceholderText = "Digite o comando aqui..."
+    CommandBox.Text = ""
+    CommandBox.TextColor3 = Color3.new(1, 1, 1)
+    CommandBox.TextScaled = true
+    CommandBox.Font = Enum.Font.SourceSans
+    CommandBox.Parent = MainFrame
+
+    -- ScrollFrame para lista de comandos
+    local ScrollFrame = Instance.new("ScrollingFrame")
+    ScrollFrame.Size = UDim2.new(1, -10, 1, -110)
+    ScrollFrame.Position = UDim2.new(0, 5, 0, 105)
+    ScrollFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    ScrollFrame.BorderColor3 = Color3.new(1, 1, 1)
+    ScrollFrame.BorderSizePixel = 1
+    ScrollFrame.ScrollBarThickness = 8
+    ScrollFrame.Parent = MainFrame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 2)
+    UIListLayout.Parent = ScrollFrame
+
+    -- Lista de comandos
+    local commands = {
+        "tp [nick] - Teleportar para player",
+        "view [nick] - Ver pela câmera do player",
+        "unview - Parar de ver pela câmera",
+        "glue [nick] - Grudar no player",
+        "unglue - Desgrudar do player",
+        "bug [nick] - Aplicar bug no player",
+        "unbug [nick] - Remover bug do player"
     }
-}
 
--- Função para criar GUI de comandos
-local function createCommandsGUI()
-    -- Remove GUI existente se houver
-    local existingGui = playerGui:FindFirstChild("CommandsGUI")
-    if existingGui then
-        existingGui:Destroy()
+    -- Criar labels dos comandos
+    for i, command in ipairs(commands) do
+        local CommandLabel = Instance.new("TextLabel")
+        CommandLabel.Size = UDim2.new(1, 0, 0, 25)
+        CommandLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+        CommandLabel.BorderColor3 = Color3.new(1, 1, 1)
+        CommandLabel.BorderSizePixel = 1
+        CommandLabel.Text = command
+        CommandLabel.TextColor3 = Color3.new(1, 1, 1)
+        CommandLabel.TextXAlignment = Enum.TextXAlignment.Left
+        CommandLabel.TextScaled = true
+        CommandLabel.Font = Enum.Font.SourceSans
+        CommandLabel.Parent = ScrollFrame
     end
-    
-    -- Criar ScreenGui
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "CommandsGUI"
-    screenGui.Parent = playerGui
-    screenGui.ResetOnSpawn = false
-    
-    -- Frame principal
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 450, 0, 500)
-    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -250)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = screenGui
-    
-    -- Borda do frame
-    local border = Instance.new("UIStroke")
-    border.Color = Color3.fromRGB(60, 60, 60)
-    border.Thickness = 2
-    border.Parent = mainFrame
-    
-    -- Cantos arredondados
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = mainFrame
-    
-    -- Título
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -40, 0, 40)
-    title.Position = UDim2.new(0, 20, 0, 10)
-    title.BackgroundTransparency = 1
-    title.Text = "COMANDOS DISPONÍVEIS"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextScaled = true
-    title.Font = Enum.Font.SourceSansBold
-    title.Parent = mainFrame
-    
-    -- Botão X para fechar
-    local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -35, 0, 5)
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    closeButton.Text = "X"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.TextScaled = true
-    closeButton.Font = Enum.Font.SourceSansBold
-    closeButton.Parent = mainFrame
-    
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 5)
-    closeCorner.Parent = closeButton
-    
-    -- ScrollingFrame para os comandos
-    local scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Size = UDim2.new(1, -20, 1, -70)
-    scrollFrame.Position = UDim2.new(0, 10, 0, 60)
-    scrollFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    scrollFrame.BorderSizePixel = 0
-    scrollFrame.ScrollBarThickness = 8
-    scrollFrame.Parent = mainFrame
-    
-    local scrollCorner = Instance.new("UICorner")
-    scrollCorner.CornerRadius = UDim.new(0, 5)
-    scrollCorner.Parent = scrollFrame
-    
-    -- Layout para os comandos
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 5)
-    listLayout.Parent = scrollFrame
-    
-    -- Padding interno
-    local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
-    padding.PaddingTop = UDim.new(0, 10)
-    padding.PaddingBottom = UDim.new(0, 10)
-    padding.Parent = scrollFrame
-    
-    -- Função para criar label de comando
-    local function createCommandLabel(text, isCategory)
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 0, isCategory and 30 or 25)
-        label.BackgroundTransparency = isCategory and 0 or 1
-        label.BackgroundColor3 = isCategory and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(40, 40, 40)
-        label.Text = text
-        label.TextColor3 = isCategory and Color3.fromRGB(100, 200, 255) or Color3.fromRGB(200, 200, 200)
-        label.TextScaled = true
-        label.Font = isCategory and Enum.Font.SourceSansBold or Enum.Font.SourceSans
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = scrollFrame
-        
-        if isCategory then
-            local categoryCorner = Instance.new("UICorner")
-            categoryCorner.CornerRadius = UDim.new(0, 3)
-            categoryCorner.Parent = label
-        end
-        
-        return label
-    end
-    
-    -- Função para criar espaçador
-    local function createSpacer()
-        local spacer = Instance.new("Frame")
-        spacer.Size = UDim2.new(1, 0, 0, 10)
-        spacer.BackgroundTransparency = 1
-        spacer.Parent = scrollFrame
-        return spacer
-    end
-    
-    -- Adicionar todas as seções
-    for _, section in pairs({"basic", "teleports", "scripts"}) do
-        local sectionData = commandsData[section]
-        
-        -- Título da seção
-        createCommandLabel(sectionData.title, true)
-        
-        -- Comandos da seção
-        for _, command in pairs(sectionData.commands) do
-            createCommandLabel(command, false)
-        end
-        
-        -- Espaçador entre seções
-        createSpacer()
-    end
-    
+
     -- Ajustar tamanho do scroll
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
-    
-    -- Conectar botão de fechar
-    closeButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, #commands * 27)
+
+    -- Animações e eventos
+    local function openGui()
+        isGuiOpen = true
+        local targetPosition = UDim2.new(0, 10, 1, -410)
+        
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = targetPosition})
+        tween:Play()
+        
+        MainFrame.Visible = true
+        OpenButton.Visible = false
+    end
+
+    local function closeGui()
+        isGuiOpen = false
+        local targetPosition = UDim2.new(0, -300, 1, -410)
+        
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = targetPosition})
+        tween:Play()
+        
+        tween.Completed:Connect(function()
+            MainFrame.Visible = false
+            OpenButton.Visible = true
+        end)
+    end
+
+    OpenButton.MouseButton1Click:Connect(openGui)
+    CloseButton.MouseButton1Click:Connect(closeGui)
+
+    -- Sistema de arrastar para mobile (touch)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    -- Mouse events
+    OpenButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = OpenButton.Position
+        end
     end)
-    
-    -- Animação de entrada
-    mainFrame.Size = UDim2.new(0, 0, 0, 0)
-    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 450, 0, 500)
-    })
-    tween:Play()
-    
-    -- Atualizar canvas size quando o layout mudar
-    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
+
+    OpenButton.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging and dragStart then
+                local dragDistance = (input.Position - dragStart).Magnitude
+                if dragDistance < 5 then -- Se moveu menos de 5 pixels, considera como clique
+                    openGui()
+                end
+            end
+            dragging = false
+        end
+    end)
+
+    -- Touch drag movement
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            if dragStart and startPos then
+                local delta = input.Position - dragStart
+                OpenButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end
+    end)
+
+    -- Atualizar prefix
+    PrefixBox.FocusLost:Connect(function()
+        if PrefixBox.Text ~= "" then
+            prefix = PrefixBox.Text
+        else
+            PrefixBox.Text = prefix
+        end
+    end)
+
+    -- Processar comando da TextBox
+    CommandBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed and CommandBox.Text ~= "" then
+            processCommand(CommandBox.Text)
+            CommandBox.Text = ""
+        end
     end)
 end
 
--- Função para processar comando ;cmds
-local function processCommand(message)
-    if message:lower() == ";cmds" then
-        createCommandsGUI()
-        print("📋 GUI de comandos aberta!")
+-- Função para processar comandos
+function processCommand(text)
+    local args = text:split(" ")
+    local command = args[1]:lower()
+    
+    if command == "tp" and args[2] then
+        local targetPlayer = findPlayer(args[2])
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(5, 0, 0)
+            end
+        end
+        
+    elseif command == "view" and args[2] then
+        local targetPlayer = findPlayer(args[2])
+        if targetPlayer then
+            viewingPlayer = targetPlayer
+            workspace.CurrentCamera.CameraSubject = targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid")
+        end
+        
+    elseif command == "unview" then
+        viewingPlayer = nil
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            workspace.CurrentCamera.CameraSubject = LocalPlayer.Character.Humanoid
+        end
+        
+    elseif command == "glue" and args[2] then
+        local targetPlayer = findPlayer(args[2])
+        if targetPlayer then
+            gluedPlayer = targetPlayer
+            if glueConnection then
+                glueConnection:Disconnect()
+            end
+            glueConnection = RunService.Heartbeat:Connect(function()
+                if gluedPlayer and gluedPlayer.Character and gluedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        -- Posicionar atrás do player (Z positivo = atrás)
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = gluedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                    end
+                end
+            end)
+        end
+        
+    elseif command == "unglue" then
+        gluedPlayer = nil
+        if glueConnection then
+            glueConnection:Disconnect()
+            glueConnection = nil
+        end
+        
+    elseif command == "bug" and args[2] then
+        local targetPlayer = findPlayer(args[2])
+        if targetPlayer then
+            local Remote = ReplicatedStorage:FindFirstChild("RE") and ReplicatedStorage.RE:FindFirstChild("1Gu1n")
+            if Remote then
+                bugConnections[targetPlayer.UserId] = RunService.Stepped:Connect(function()
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local crazyVector = Vector3.new(
+                            math.random(1e14, 1e15),
+                            math.random(1e14, 1e15),
+                            math.random(1e14, 1e15)
+                        )
+                        local args = {
+                            [1] = targetPlayer.Character.HumanoidRootPart,
+                            [2] = targetPlayer.Character.HumanoidRootPart,
+                            [3] = crazyVector,
+                            [4] = targetPlayer.Character.HumanoidRootPart.Position,
+                            [5] = LocalPlayer.Backpack:FindFirstChild("Assault") and LocalPlayer.Backpack.Assault.GunScript_Local:FindFirstChild("MuzzleEffect"),
+                            [6] = LocalPlayer.Backpack:FindFirstChild("Assault") and LocalPlayer.Backpack.Assault.GunScript_Local:FindFirstChild("HitEffect"),
+                            [7] = 0,
+                            [8] = 0,
+                            [9] = { [1] = false },
+                            [10] = {
+                                [1] = 25,
+                                [2] = Vector3.new(100, 100, 100),
+                                [3] = BrickColor.new(29),
+                                [4] = 0.25,
+                                [5] = Enum.Material.SmoothPlastic,
+                                [6] = 0.25
+                            },
+                            [11] = true,
+                            [12] = false
+                        }
+                        Remote:FireServer(unpack(args))
+                    end
+                end)
+            end
+        end
+        
+    elseif command == "unbug" and args[2] then
+        local targetPlayer = findPlayer(args[2])
+        if targetPlayer and bugConnections[targetPlayer.UserId] then
+            bugConnections[targetPlayer.UserId]:Disconnect()
+            bugConnections[targetPlayer.UserId] = nil
+        end
     end
 end
 
--- Sistema de captura de chat para ;cmds
-player.Chatted:Connect(function(message)
-    processCommand(message)
+-- Detectar comandos no chat
+LocalPlayer.Chatted:Connect(function(message)
+    if message:sub(1, #prefix) == prefix then
+        local command = message:sub(#prefix + 1)
+        processCommand(command)
+    end
 end)
 
--- Função para executar os 3 scripts automáticos
-local function executeAutoScripts()
-    print("⚡ Executando 3 scripts automáticos...")
-    
-    -- Script 1
-    spawn(function()
-        local success1, error1 = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando1/main/Main.txt"))()
-            print("✅ Comando 1 executado com sucesso!")
-        end)
-        if not success1 then
-            print("❌ Erro no Comando 1: " .. tostring(error1))
-        end
-    end)
-    
-    -- Script 2
-    spawn(function()
-        local success2, error2 = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando2/main/Main.txt"))()
-            print("✅ Comando 2 executado com sucesso!")
-        end)
-        if not success2 then
-            print("❌ Erro no Comando 2: " .. tostring(error2))
-        end
-    end)
-    
-    -- Script 3
-    spawn(function()
-        local success3, error3 = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Shadow6698/comando3/main/Main.txt"))()
-            print("✅ Comando 3 executado com sucesso!")
-        end)
-        if not success3 then
-            print("❌ Erro no Comando 3: " .. tostring(error3))
-        end
-    end)
-end
+-- Criar GUI quando o script rodar
+createGUI()
 
--- INICIALIZAÇÃO
-print("🚀 Script de Comandos Anotados Carregado!")
-print("⚡ Executando 3 scripts automáticos...")
-
--- Executar os 3 scripts automaticamente
-executeAutoScripts()
-
-print("💡 Digite ;cmds para abrir a GUI")
-print("⚠️ ATENÇÃO: Comandos são apenas para referência - NÃO FUNCIONAM!")
-
--- Abrir GUI automaticamente
-spawn(function()
-    wait(0.5)
-    createCommandsGUI()
-    print("🎮 GUI aberta automaticamente!")
-    print("🔥 Todos os scripts foram executados!")
-end)
+print("Sistema de comandos carregado! Prefix atual: " .. prefix)
