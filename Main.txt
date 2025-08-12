@@ -35,43 +35,45 @@ local function createGUI()
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = PlayerGui
 
-    -- Botão para abrir GUI
+    -- Botão para abrir GUI (menor)
     local OpenButton = Instance.new("TextButton")
     OpenButton.Name = "OpenButton"
-    OpenButton.Size = UDim2.new(0, 60, 0, 30)
-    OpenButton.Position = UDim2.new(0, 10, 1, -90)
+    OpenButton.Size = UDim2.new(0, 50, 0, 25)
+    OpenButton.Position = UDim2.new(0, 10, 1, -80)
     OpenButton.BackgroundColor3 = Color3.new(0, 0, 0)
     OpenButton.BorderColor3 = Color3.new(1, 1, 1)
-    OpenButton.BorderSizePixel = 2
-    OpenButton.Text = "CMDS"
+    OpenButton.BorderSizePixel = 1
+    OpenButton.Text = "CMD"
     OpenButton.TextColor3 = Color3.new(1, 1, 1)
     OpenButton.TextScaled = true
     OpenButton.Font = Enum.Font.SourceSansBold
     OpenButton.Active = true
     OpenButton.Parent = ScreenGui
 
-    -- Frame principal dos comandos
+    -- Frame principal dos comandos (menor)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    MainFrame.Position = UDim2.new(0, -300, 1, -410)
+    MainFrame.Size = UDim2.new(0, 220, 0, 280)
+    MainFrame.Position = UDim2.new(0, 100, 0, 100) -- Posição inicial fixa
     MainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
     MainFrame.BorderColor3 = Color3.new(1, 1, 1)
     MainFrame.BorderSizePixel = 2
     MainFrame.Visible = false
+    MainFrame.Active = true
     MainFrame.Parent = ScreenGui
 
-    -- Título com botão X
+    -- Título com botão X (menor)
     local TitleFrame = Instance.new("Frame")
-    TitleFrame.Size = UDim2.new(1, 0, 0, 30)
+    TitleFrame.Size = UDim2.new(1, 0, 0, 25)
     TitleFrame.Position = UDim2.new(0, 0, 0, 0)
     TitleFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
     TitleFrame.BorderColor3 = Color3.new(1, 1, 1)
     TitleFrame.BorderSizePixel = 1
+    TitleFrame.Active = true
     TitleFrame.Parent = MainFrame
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -30, 1, 0)
+    Title.Size = UDim2.new(1, -25, 1, 0)
     Title.Position = UDim2.new(0, 0, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = "COMANDOS"
@@ -81,8 +83,8 @@ local function createGUI()
     Title.Parent = TitleFrame
 
     local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 30, 1, 0)
-    CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    CloseButton.Size = UDim2.new(0, 25, 1, 0)
+    CloseButton.Position = UDim2.new(1, -25, 0, 0)
     CloseButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     CloseButton.BorderColor3 = Color3.new(1, 1, 1)
     CloseButton.BorderSizePixel = 1
@@ -92,17 +94,17 @@ local function createGUI()
     CloseButton.Font = Enum.Font.SourceSansBold
     CloseButton.Parent = TitleFrame
 
-    -- Frame para prefix
+    -- Frame para prefix (menor)
     local PrefixFrame = Instance.new("Frame")
-    PrefixFrame.Size = UDim2.new(1, -10, 0, 30)
-    PrefixFrame.Position = UDim2.new(0, 5, 0, 35)
+    PrefixFrame.Size = UDim2.new(1, -8, 0, 25)
+    PrefixFrame.Position = UDim2.new(0, 4, 0, 30)
     PrefixFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
     PrefixFrame.BorderColor3 = Color3.new(1, 1, 1)
     PrefixFrame.BorderSizePixel = 1
     PrefixFrame.Parent = MainFrame
 
     local PrefixLabel = Instance.new("TextLabel")
-    PrefixLabel.Size = UDim2.new(0, 60, 1, 0)
+    PrefixLabel.Size = UDim2.new(0, 45, 1, 0)
     PrefixLabel.Position = UDim2.new(0, 0, 0, 0)
     PrefixLabel.BackgroundTransparency = 1
     PrefixLabel.Text = "Prefix:"
@@ -112,8 +114,8 @@ local function createGUI()
     PrefixLabel.Parent = PrefixFrame
 
     local PrefixBox = Instance.new("TextBox")
-    PrefixBox.Size = UDim2.new(1, -65, 1, -4)
-    PrefixBox.Position = UDim2.new(0, 62, 0, 2)
+    PrefixBox.Size = UDim2.new(1, -48, 1, -4)
+    PrefixBox.Position = UDim2.new(0, 46, 0, 2)
     PrefixBox.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
     PrefixBox.BorderColor3 = Color3.new(1, 1, 1)
     PrefixBox.BorderSizePixel = 1
@@ -123,28 +125,28 @@ local function createGUI()
     PrefixBox.Font = Enum.Font.SourceSans
     PrefixBox.Parent = PrefixFrame
 
-    -- TextBox para comandos
+    -- TextBox para comandos (menor)
     local CommandBox = Instance.new("TextBox")
-    CommandBox.Size = UDim2.new(1, -10, 0, 30)
-    CommandBox.Position = UDim2.new(0, 5, 0, 70)
+    CommandBox.Size = UDim2.new(1, -8, 0, 25)
+    CommandBox.Position = UDim2.new(0, 4, 0, 60)
     CommandBox.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
     CommandBox.BorderColor3 = Color3.new(1, 1, 1)
     CommandBox.BorderSizePixel = 1
-    CommandBox.PlaceholderText = "Digite o comando aqui..."
+    CommandBox.PlaceholderText = "Digite o comando..."
     CommandBox.Text = ""
     CommandBox.TextColor3 = Color3.new(1, 1, 1)
     CommandBox.TextScaled = true
     CommandBox.Font = Enum.Font.SourceSans
     CommandBox.Parent = MainFrame
 
-    -- ScrollFrame para lista de comandos
+    -- ScrollFrame para lista de comandos (menor)
     local ScrollFrame = Instance.new("ScrollingFrame")
-    ScrollFrame.Size = UDim2.new(1, -10, 1, -110)
-    ScrollFrame.Position = UDim2.new(0, 5, 0, 105)
+    ScrollFrame.Size = UDim2.new(1, -8, 1, -95)
+    ScrollFrame.Position = UDim2.new(0, 4, 0, 90)
     ScrollFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
     ScrollFrame.BorderColor3 = Color3.new(1, 1, 1)
     ScrollFrame.BorderSizePixel = 1
-    ScrollFrame.ScrollBarThickness = 8
+    ScrollFrame.ScrollBarThickness = 6
     ScrollFrame.Parent = MainFrame
 
     local UIListLayout = Instance.new("UIListLayout")
@@ -152,21 +154,21 @@ local function createGUI()
     UIListLayout.Padding = UDim.new(0, 2)
     UIListLayout.Parent = ScrollFrame
 
-    -- Lista de comandos
+    -- Lista de comandos (mais compacta)
     local commands = {
-        "tp [nick] - Teleportar para player",
-        "view [nick] - Ver pela câmera do player",
-        "unview - Parar de ver pela câmera",
-        "glue [nick] - Grudar no player",
-        "unglue - Desgrudar do player",
-        "bug [nick] - Aplicar bug no player",
-        "unbug [nick] - Remover bug do player"
+        "tp [nick] - Teleportar",
+        "view [nick] - Ver câmera",
+        "unview - Parar view",
+        "glue [nick] - Grudar",
+        "unglue - Desgrudar",
+        "bug [nick] - Bug player",
+        "unbug [nick] - Remove bug"
     }
 
-    -- Criar labels dos comandos
+    -- Criar labels dos comandos (menores)
     for i, command in ipairs(commands) do
         local CommandLabel = Instance.new("TextLabel")
-        CommandLabel.Size = UDim2.new(1, 0, 0, 25)
+        CommandLabel.Size = UDim2.new(1, 0, 0, 20)
         CommandLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
         CommandLabel.BorderColor3 = Color3.new(1, 1, 1)
         CommandLabel.BorderSizePixel = 1
@@ -179,45 +181,56 @@ local function createGUI()
     end
 
     -- Ajustar tamanho do scroll
-    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, #commands * 27)
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, #commands * 22)
 
     -- Animações e eventos
     local function openGui()
         isGuiOpen = true
-        local targetPosition = UDim2.new(0, 10, 1, -410)
-        
-        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = targetPosition})
-        tween:Play()
-        
         MainFrame.Visible = true
-        OpenButton.Visible = false
+        
+        -- Posicionar no centro da tela atual
+        local viewportSize = workspace.CurrentCamera.ViewportSize
+        local centerX = (viewportSize.X / 2) - 110
+        local centerY = (viewportSize.Y / 2) - 140
+        
+        -- Animação de entrada suave (botão CMD permanece visível)
+        MainFrame.Size = UDim2.new(0, 0, 0, 0)
+        MainFrame.Position = UDim2.new(0, viewportSize.X / 2, 0, viewportSize.Y / 2)
+        
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 220, 0, 280),
+            Position = UDim2.new(0, centerX, 0, centerY)
+        })
+        tween:Play()
     end
 
     local function closeGui()
         isGuiOpen = false
-        local targetPosition = UDim2.new(0, -300, 1, -410)
         
-        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = targetPosition})
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        })
         tween:Play()
         
         tween.Completed:Connect(function()
             MainFrame.Visible = false
-            OpenButton.Visible = true
         end)
     end
 
     OpenButton.MouseButton1Click:Connect(openGui)
     CloseButton.MouseButton1Click:Connect(closeGui)
 
-    -- Sistema de arrastar para mobile (touch)
+    -- Sistema de arrastar para mobile (OpenButton)
     local dragging = false
     local dragStart = nil
     local startPos = nil
+    local isDragging = false
 
-    -- Mouse events
     OpenButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
+            isDragging = false
             dragStart = input.Position
             startPos = OpenButton.Position
         end
@@ -225,22 +238,61 @@ local function createGUI()
 
     OpenButton.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if dragging and dragStart then
+            if dragging and dragStart and not isDragging then
                 local dragDistance = (input.Position - dragStart).Magnitude
-                if dragDistance < 5 then -- Se moveu menos de 5 pixels, considera como clique
+                if dragDistance < 10 then -- Aumentei para 10 pixels
                     openGui()
                 end
             end
             dragging = false
+            isDragging = false
         end
     end)
 
-    -- Touch drag movement
+    -- Sistema de arrastar para mobile (MainFrame pela barra de título)
+    local frameDragging = false
+    local frameDragStart = nil
+    local frameStartPos = nil
+
+    TitleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            frameDragging = true
+            frameDragStart = input.Position
+            frameStartPos = MainFrame.Position
+        end
+    end)
+
+    TitleFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            frameDragging = false
+        end
+    end)
+
+    -- Movement handling
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            if dragStart and startPos then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            -- Arrastar botão
+            if dragging and dragStart and startPos then
                 local delta = input.Position - dragStart
-                OpenButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                if delta.Magnitude > 5 then -- Marca como arrastando se moveu mais de 5 pixels
+                    isDragging = true
+                end
+                
+                -- Obter tamanho atual da tela
+                local viewportSize = workspace.CurrentCamera.ViewportSize
+                local newX = math.clamp(startPos.X.Offset + delta.X, 0, viewportSize.X - 50)
+                local newY = math.clamp(startPos.Y.Offset + delta.Y, 0, viewportSize.Y - 25)
+                OpenButton.Position = UDim2.new(0, newX, 0, newY)
+            end
+            
+            -- Arrastar frame principal
+            if frameDragging and frameDragStart and frameStartPos then
+                local delta = input.Position - frameDragStart
+                -- Obter tamanho atual da tela
+                local viewportSize = workspace.CurrentCamera.ViewportSize
+                local newX = math.clamp(frameStartPos.X.Offset + delta.X, 0, viewportSize.X - 220)
+                local newY = math.clamp(frameStartPos.Y.Offset + delta.Y, 0, viewportSize.Y - 280)
+                MainFrame.Position = UDim2.new(0, newX, 0, newY)
             end
         end
     end)
@@ -299,7 +351,6 @@ function processCommand(text)
             glueConnection = RunService.Heartbeat:Connect(function()
                 if gluedPlayer and gluedPlayer.Character and gluedPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        -- Posicionar atrás do player (Z positivo = atrás)
                         LocalPlayer.Character.HumanoidRootPart.CFrame = gluedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
                     end
                 end
@@ -372,4 +423,4 @@ end)
 -- Criar GUI quando o script rodar
 createGUI()
 
-print("Sistema de comandos carregado! Prefix atual: " .. prefix)
+print("Sistema de comandos mobile carregado! Prefix atual: " .. prefix)
